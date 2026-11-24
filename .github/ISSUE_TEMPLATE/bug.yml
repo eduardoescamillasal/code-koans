@@ -1,0 +1,17 @@
+name: Bug report
+description: Report a runner, exercise, or validation problem
+title: "[Bug] "
+body:
+  - type: input
+    id: environment
+    attributes:
+      label: Python version and operating system
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction and expected behavior
+      description: Include the command and shortest relevant output. Remove private information.
+    validations:
+      required: true
