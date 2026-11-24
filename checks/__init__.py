@@ -4,9 +4,9 @@ from importlib import import_module
 import unittest
 
 TRACKS = {
-    "python": ("references", "closures", "attributes", "streams", "scheduler"),
+    "python": ("references", "closures", "attributes", "streams", "scheduler", "rest_service"),
     "deep_learning": ("linear", "precision", "autodiff", "tensor", "attention"),
-    "agents": ("protocol", "tools", "retrieval", "planning", "runtime"),
+    "agents": ("protocol", "tools", "retrieval", "planning", "runtime", "providers", "workflow_graph", "grounded_qa", "webhooks"),
     "cross_track": ("diagnosis",),
 }
 STAGES = ("predict", "contrast", "implement", "break_cases", "transfer")
