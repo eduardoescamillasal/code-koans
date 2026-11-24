@@ -5,7 +5,7 @@ from importlib import import_module
 from types import ModuleType
 import unittest
 
-from koans import Exercise
+from koans import Exercise, Koan
 
 TRACKS = {
     "python": ("references", "closures", "attributes", "streams", "scheduler", "rest_service"),
@@ -24,30 +24,39 @@ def load_exercise(track: str, name: str) -> ModuleType:
     return import_module(f"koans.{track}.{name}")
 
 
-def make_case(check: ModuleType, examples: ModuleType, exercise: Exercise, stage: str) -> unittest.TestCase:
-    def test(self: unittest.TestCase) -> None:
-        if stage in ("predict", "contrast"):
-            observe = getattr(examples, stage)
-            answer = "prediction" if stage == "predict" else "contrast"
-            if exercise is examples:
-                observe(self)
-            else:
-                observe(self, getattr(exercise, answer))
-            return
-        if stage == "implement":
-            examples.practice(self, exercise)
-        elif stage == "break_cases":
-            examples.practice_break(self, exercise)
-        elif stage == "transfer":
-            examples.practice_transfer(self, exercise)
-        getattr(check, stage)(self, exercise)
+def _lesson(examples: ModuleType) -> type[Koan]:
+    lessons = [
+        value
+        for value in vars(examples).values()
+        if isinstance(value, type) and issubclass(value, Koan) and value.__module__ == examples.__name__
+    ]
+    if len(lessons) != 1 or len(lessons[0].steps()) < len(STAGES):
+        raise ValueError(f"{examples.__name__} needs one Koan class with at least five test methods")
+    return lessons[0]
 
-    test.__name__ = f"test_{stage}"
-    module_name = getattr(exercise, "__name__", "")
-    label = module_name.replace(".", "/") + ".py" if module_name.startswith("koans.") else check.__name__
-    test.__doc__ = f"{label} · {stage}"
-    case = type(check.__name__.split(".")[-1], (unittest.TestCase,), {test.__name__: test})
-    return case(test.__name__)
+
+def make_cases(
+    check: ModuleType, examples: ModuleType, exercise: Exercise, stage: str
+) -> Iterator[unittest.TestCase]:
+    lesson = _lesson(examples)
+    prediction, contrast, *construction, boundary, transfer = lesson.steps()
+    groups = ((prediction,), (contrast,), tuple(construction), (boundary,), (transfer,))
+    names = groups[STAGES.index(stage)]
+
+    def build(name: str, verify: bool) -> unittest.TestCase:
+        example = getattr(lesson, name)
+
+        def test(self: unittest.TestCase) -> None:
+            example(self)
+            if verify:
+                getattr(check, stage)(self, exercise)
+
+        test.__doc__ = f"{examples.__name__.replace('.', '/')}.py · {stage}"
+        case = type(lesson.__name__, (lesson,), {name: test, "__module__": lesson.__module__})
+        return case(name)
+
+    for name in names:
+        yield build(name, verify=stage not in STAGES[:2] and name == names[-1])
 
 
 def suite(track: str | None = None, module: str | None = None) -> Iterator[unittest.TestCase]:
@@ -60,4 +69,4 @@ def suite(track: str | None = None, module: str | None = None) -> Iterator[unitt
             check = load_module(track_name, name)
             exercise = load_exercise(track_name, name)
             for stage in STAGES:
-                yield make_case(check, exercise, exercise, stage)
+                yield from make_cases(check, exercise, exercise, stage)

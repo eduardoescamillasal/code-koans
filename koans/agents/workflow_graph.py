@@ -9,26 +9,46 @@ For transfer, continue a graph in pages using a positive page size and at most
 the requested number of pages. Stop at failure or completion. Reject invalid
 page size or negative page count. Zero pages still reports the checkpoint status."""
 
-from unittest import TestCase
 
-from koans import Exercise, __, todo
+from koans import Koan, __, todo
 from koans.agents._workflow_graph import Checkpoint, Node, RunResult, State
 
 
-def predict(t: TestCase, *answers: object) -> None:
-    original = {"attempts": 1}
-    candidate = original
-    candidate["attempts"] += 1
-    expected: object = __
-    t.assertEqual(answers[0] if answers else expected, (original["attempts"], candidate["attempts"]))
+class AboutWorkflowCheckpoints(Koan):
+    def test_aliasing_mutates_the_checkpoint(self) -> None:
+        original = {"attempts": 1}
+        candidate = original
+        candidate["attempts"] += 1
+        self.assertEqual(__, (original["attempts"], candidate["attempts"]))
 
+    def test_a_copy_isolates_candidate_changes(self) -> None:
+        original = {"attempts": 1}
+        candidate = original.copy()
+        candidate["attempts"] += 1
+        self.assertEqual(__, (original["attempts"], candidate["attempts"]))
 
-def contrast(t: TestCase, *answers: object) -> None:
-    original = {"attempts": 1}
-    candidate = original.copy()
-    candidate["attempts"] += 1
-    expected: object = __
-    t.assertEqual(answers[0] if answers else expected, (original["attempts"], candidate["attempts"]))
+    def test_a_valid_transition_commits_a_revision(self) -> None:
+        start = Checkpoint("count", 2, {"count": 7})
+        graph = WorkflowGraph({"count": _count_once})
+        self.assertEqual(graph.advance(start, 1), RunResult("complete", Checkpoint(None, 3, {"count": 8})))
+        self.assertEqual(start.state, {"count": 7})
+
+    def test_an_unknown_route_cannot_commit_state(self) -> None:
+        def invalid(state: State) -> str:
+            state["count"] += 99
+            return "missing"
+
+        start = Checkpoint("bad", 4, {"count": 1})
+        graph = WorkflowGraph({"bad": invalid})
+        self.assertEqual(graph.advance(start, 1), RunResult("failed", start))
+        self.assertEqual(start.state, {"count": 1})
+
+    def test_page_limits_allow_resuming_a_checkpoint(self) -> None:
+        start = Checkpoint("count", 0, {"count": 0})
+        graph = WorkflowGraph({"count": _count_once})
+        self.assertEqual(graph.run_pages(start, 1, 0), RunResult("paused", start))
+        self.assertEqual(graph.run_pages(start, 1, 3),
+                      RunResult("complete", Checkpoint(None, 1, {"count": 1})))
 
 
 class WorkflowGraph:
@@ -58,29 +78,3 @@ class WorkflowGraph:
 
 def _count_once(state: State) -> None:
     state["count"] += 1
-
-
-def practice(t: TestCase, exercise: Exercise) -> None:
-    start = Checkpoint("count", 2, {"count": 7})
-    graph = exercise.WorkflowGraph({"count": _count_once})
-    t.assertEqual(graph.advance(start, 1), RunResult("complete", Checkpoint(None, 3, {"count": 8})))
-    t.assertEqual(start.state, {"count": 7})
-
-
-def practice_break(t: TestCase, exercise: Exercise) -> None:
-    def invalid(state: State) -> str:
-        state["count"] += 99
-        return "missing"
-
-    start = Checkpoint("bad", 4, {"count": 1})
-    graph = exercise.WorkflowGraph({"bad": invalid})
-    t.assertEqual(graph.advance(start, 1), RunResult("failed", start))
-    t.assertEqual(start.state, {"count": 1})
-
-
-def practice_transfer(t: TestCase, exercise: Exercise) -> None:
-    start = Checkpoint("count", 0, {"count": 0})
-    graph = exercise.WorkflowGraph({"count": _count_once})
-    t.assertEqual(graph.run_pages(start, 1, 0), RunResult("paused", start))
-    t.assertEqual(graph.run_pages(start, 1, 3),
-                  RunResult("complete", Checkpoint(None, 1, {"count": 1})))

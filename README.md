@@ -22,7 +22,7 @@ On systems where the command is named `python3`, use it in place of `python`.
 The first run stops here (traceback shortened).
 
 ```text
-test_predict (checks.python_references.test_predict)
+test_two_names_share_the_same_list (koans.python.references.AboutReferences.test_two_names_share_the_same_list)
 koans/python/references.py · predict ... FAIL
 ...
 AssertionError: __ (fill in your prediction) != (True, 2)
@@ -33,17 +33,16 @@ Ran 1 test in ...
 FAILED (failures=1)
 ```
 
-Open `koans/python/references.py`. The example, its assertion, the implementation
-scaffold, and concrete practice tests are all in this file. In `predict`, read
-the example and replace the `__` in `expected: object = __` with your answer.
-Rerun, then do the same in `contrast` and explain why the behavior changes.
+Open `koans/python/references.py`. Each lesson is an `About…` class with short
+`test_…` methods in reading order. Read the setup and fill the `__` directly in
+`self.assertEqual(__, ...)`. Rerun and follow the next failing method.
 
-When the runner reaches a `todo("...")`, replace that call with the small piece
-of code described in the message. Rerun to uncover the next missing piece.
-Read `practice`, `practice_break`, and `practice_transfer` for sample calls
-and expected behavior. The runner also applies independent checks under
-`checks/`. Keep your edits in `koans/`. Local checks and reference solutions
-are inspectable.
+Some methods exercise code in the same file. Replace each focused
+`todo("...")` with the requested code, rerunning as you go. The runner also
+applies independent checks under `checks/`. Keep your edits in `koans/`.
+Local checks and reference solutions are inspectable.
+
+The inline lesson style is inspired by [Python Koans](https://github.com/gregmalcolm/python_koans/tree/master/koans).
 
 ```sh
 python contemplate.py python

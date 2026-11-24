@@ -10,28 +10,41 @@ logits, target, and bias. The two affected class indices are distinct.
 """
 
 import math
-from unittest import TestCase
 
-from koans import Exercise, __, todo
-
-
-def predict(t: TestCase, *answers: object) -> None:
-    logits = [1000.0, 1000.0]
-    try:
-        weights = [math.exp(logit) for logit in logits]
-    except OverflowError:
-        outcome: object = "overflow"
-    else:
-        outcome = tuple(weight / sum(weights) for weight in weights)
-    expected: object = __
-    t.assertEqual(answers[0] if answers else expected, outcome)
+from koans import Koan, __, todo
 
 
-def contrast(t: TestCase, *answers: object) -> None:
-    logits = [1000.0, 1000.0]
-    weights = [math.exp(logit - max(logits)) for logit in logits]
-    expected: object = __
-    t.assertEqual(answers[0] if answers else expected, tuple(weight / sum(weights) for weight in weights))
+class AboutStableProbabilities(Koan):
+    def test_large_logits_can_overflow(self) -> None:
+        logits = [1000.0, 1000.0]
+        try:
+            weights = [math.exp(logit) for logit in logits]
+        except OverflowError:
+            outcome: object = "overflow"
+        else:
+            outcome = tuple(weight / sum(weights) for weight in weights)
+        self.assertEqual(__, outcome)
+
+    def test_shifting_logits_keeps_weights_finite(self) -> None:
+        logits = [1000.0, 1000.0]
+        weights = [math.exp(logit - max(logits)) for logit in logits]
+        self.assertEqual(__, tuple(weight / sum(weights) for weight in weights))
+
+    def test_equal_logits_share_probability_mass(self) -> None:
+        loss, gradient = cross_entropy([1000, 1000], 0)
+        self.assertAlmostEqual(loss, math.log(2))
+        self.assertEqual(gradient, [-0.5, 0.5])
+
+    def test_underflow_need_not_make_the_loss_infinite(self) -> None:
+        # The true target probability can underflow while its negative log stays finite.
+        loss, gradient = cross_entropy([1200.0, 0.0], 1)
+        self.assertAlmostEqual(loss, 1200.0)
+        self.assertEqual(gradient, [1.0, -1.0])
+
+    def test_a_shared_bias_receives_two_derivative_terms(self) -> None:
+        loss, slope = calibrate([0, 0, 0], 2, 0, (0, 1))
+        self.assertAlmostEqual(loss, math.log(3))
+        self.assertAlmostEqual(slope, 2 / 3)
 
 
 def cross_entropy(logits: list[float], target: int) -> tuple[float, list[float]]:
@@ -55,22 +68,3 @@ def calibrate(
         adjusted[index] += bias
     loss, _gradient = cross_entropy(adjusted, target)
     todo("reduce the per-logit derivatives to one derivative for bias")
-
-
-def practice(t: TestCase, exercise: Exercise) -> None:
-    loss, gradient = exercise.cross_entropy([1000, 1000], 0)
-    t.assertAlmostEqual(loss, math.log(2))
-    t.assertEqual(gradient, [-0.5, 0.5])
-
-
-def practice_break(t: TestCase, exercise: Exercise) -> None:
-    # The true target probability can underflow while its negative log stays finite.
-    loss, gradient = exercise.cross_entropy([1200.0, 0.0], 1)
-    t.assertAlmostEqual(loss, 1200.0)
-    t.assertEqual(gradient, [1.0, -1.0])
-
-
-def practice_transfer(t: TestCase, exercise: Exercise) -> None:
-    loss, slope = exercise.calibrate([0, 0, 0], 2, 0, (0, 1))
-    t.assertAlmostEqual(loss, math.log(3))
-    t.assertAlmostEqual(slope, 2 / 3)

@@ -12,21 +12,31 @@ Prerequisite lists may be single-pass iterators.
 
 from collections.abc import Iterable, Mapping
 from heapq import heapify, heappop, heappush
-from unittest import TestCase
 
-from koans import Exercise, __, todo
-
-
-def predict(t: TestCase, *answers: object) -> None:
-    graph = {"package": {"compile"}, "compile": set(), "test": {"compile"}}
-    expected: object = __
-    t.assertEqual(answers[0] if answers else expected, tuple(job for job, deps in graph.items() if not deps))
+from koans import Koan, __, todo
 
 
-def contrast(t: TestCase, *answers: object) -> None:
-    graph = {"package": {"compile"}, "compile": {"package"}, "test": {"compile"}}
-    expected: object = __
-    t.assertEqual(answers[0] if answers else expected, tuple(job for job, deps in graph.items() if not deps))
+class AboutDependencyPlanning(Koan):
+    def test_a_ready_job_has_no_prerequisites(self) -> None:
+        graph = {"package": {"compile"}, "compile": set(), "test": {"compile"}}
+        self.assertEqual(__, tuple(job for job, deps in graph.items() if not deps))
+
+    def test_a_cycle_can_leave_nothing_ready(self) -> None:
+        graph = {"package": {"compile"}, "compile": {"package"}, "test": {"compile"}}
+        self.assertEqual(__, tuple(job for job, deps in graph.items() if not deps))
+
+    def test_prerequisites_run_first(self) -> None:
+        graph = {"send": ["review"], "review": ["draft"], "draft": []}
+        self.assertEqual(plan(graph), ["draft", "review", "send"])
+
+    def test_ready_work_can_hide_a_separate_cycle(self) -> None:
+        # Having an initially ready job does not prove that the remaining jobs are acyclic.
+        with self.assertRaises(ValueError):
+            plan({"ready": [], "closed": ["closed"]})
+
+    def test_changes_propagate_to_dependents(self) -> None:
+        graph = {"clean": [], "package": ["clean"], "publish": ["package"], "note": []}
+        self.assertEqual(rebuild(graph, "package"), ["package", "publish"])
 
 
 Dependencies = Mapping[str, Iterable[str]]
@@ -63,19 +73,3 @@ def rebuild(dependencies: Dependencies, changed: str) -> list[str]:
         raise ValueError("unknown job")
     affected = {changed}
     todo("walk the plan and propagate changes through prerequisites")
-
-
-def practice(t: TestCase, exercise: Exercise) -> None:
-    graph = {"send": ["review"], "review": ["draft"], "draft": []}
-    t.assertEqual(exercise.plan(graph), ["draft", "review", "send"])
-
-
-def practice_break(t: TestCase, exercise: Exercise) -> None:
-    # Having an initially ready job does not prove that the remaining jobs are acyclic.
-    with t.assertRaises(ValueError):
-        exercise.plan({"ready": [], "closed": ["closed"]})
-
-
-def practice_transfer(t: TestCase, exercise: Exercise) -> None:
-    graph = {"clean": [], "package": ["clean"], "publish": ["package"], "note": []}
-    t.assertEqual(exercise.rebuild(graph, "package"), ["package", "publish"])

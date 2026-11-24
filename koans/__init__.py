@@ -2,8 +2,17 @@
 
 from types import ModuleType, SimpleNamespace
 from typing import Never
+from unittest import TestCase
 
 Exercise = ModuleType | SimpleNamespace
+
+
+class Koan(TestCase):
+    """A lesson whose cases run in the order in which they are written."""
+
+    @classmethod
+    def steps(cls) -> tuple[str, ...]:
+        return tuple(name for name in vars(cls) if name.startswith("test_"))
 
 
 class _Blank:

@@ -12,25 +12,36 @@ records. Return selected ids and the joined string. Budget is nonnegative.
 
 import math
 from collections.abc import Iterable, Sequence
-from unittest import TestCase
 
-from koans import Exercise, __, todo
-
-
-def predict(t: TestCase, *answers: object) -> None:
-    q, a, b = (1, 0), (7, 7), (1, 0)
-
-    def dot(x: tuple[int, int], y: tuple[int, int]) -> int:
-        return sum(i * j for i, j in zip(x, y))
-    expected: object = __
-    t.assertEqual(answers[0] if answers else expected, dot(q, a) > dot(q, b))
+from koans import Koan, __, todo
 
 
-def contrast(t: TestCase, *answers: object) -> None:
-    a = 7 / math.hypot(7, 7)
-    b = 1 / math.hypot(1, 0)
-    expected: object = __
-    t.assertEqual(answers[0] if answers else expected, a > b)
+class AboutCosineRetrieval(Koan):
+    def test_vector_size_affects_the_dot_product(self) -> None:
+        q, a, b = (1, 0), (7, 7), (1, 0)
+
+        def dot(x: tuple[int, int], y: tuple[int, int]) -> int:
+            return sum(i * j for i, j in zip(x, y))
+        self.assertEqual(__, dot(q, a) > dot(q, b))
+
+    def test_normalization_compares_directions(self) -> None:
+        a = 7 / math.hypot(7, 7)
+        b = 1 / math.hypot(1, 0)
+        self.assertEqual(__, a > b)
+
+    def test_retrieval_ranks_by_alignment(self) -> None:
+        documents = [("down", (0, -3), "d"), ("up", (0, 2), "u")]
+        self.assertEqual(retrieve((0, 1), documents, 1), [documents[1]])
+
+    def test_ties_use_ids_and_zero_vectors_are_invalid(self) -> None:
+        docs = [("b", (1, 0), "late"), ("a", (9, 0), "first")]
+        self.assertEqual(retrieve((1, 0), docs, 1), [docs[1]])
+        with self.assertRaises(ValueError):
+            retrieve((1, 0), [("x", (0, 0), "empty")], 1)
+
+    def test_separators_use_the_evidence_budget(self) -> None:
+        documents = [("a", (1, 0), "x"), ("b", (0, 1), "y")]
+        self.assertEqual(evidence((1, 0), documents, 2, 3), (["a", "b"], "x\ny"))
 
 
 Vector = Sequence[float]
@@ -67,20 +78,3 @@ def evidence(query: Vector, documents: Iterable[Record], k: int, budget: int) ->
         # Every separator counts against the character budget.
         todo("accept an excerpt only when it fits the remaining space")
     return chosen, "\n".join(excerpts)
-
-
-def practice(t: TestCase, exercise: Exercise) -> None:
-    documents = [("down", (0, -3), "d"), ("up", (0, 2), "u")]
-    t.assertEqual(exercise.retrieve((0, 1), documents, 1), [documents[1]])
-
-
-def practice_break(t: TestCase, exercise: Exercise) -> None:
-    docs = [("b", (1, 0), "late"), ("a", (9, 0), "first")]
-    t.assertEqual(exercise.retrieve((1, 0), docs, 1), [docs[1]])
-    with t.assertRaises(ValueError):
-        exercise.retrieve((1, 0), [("x", (0, 0), "empty")], 1)
-
-
-def practice_transfer(t: TestCase, exercise: Exercise) -> None:
-    documents = [("a", (1, 0), "x"), ("b", (0, 1), "y")]
-    t.assertEqual(exercise.evidence((1, 0), documents, 2, 3), (["a", "b"], "x\ny"))

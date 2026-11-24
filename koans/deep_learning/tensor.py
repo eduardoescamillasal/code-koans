@@ -11,19 +11,28 @@ Both inputs are nonempty sequences of numbers.
 """
 
 from typing import Protocol, Self, TypeVar
-from unittest import TestCase
 
-from koans import Exercise, __, todo
-
-
-def predict(t: TestCase, *answers: object) -> None:
-    expected: object = __
-    t.assertEqual(answers[0] if answers else expected, tuple(zip([1, 2], [10])))
+from koans import Koan, __, todo
 
 
-def contrast(t: TestCase, *answers: object) -> None:
-    expected: object = __
-    t.assertEqual(answers[0] if answers else expected, tuple((x, 10) for x in [1, 2]))
+class AboutBroadcasting(Koan):
+    def test_zip_stops_at_the_shorter_input(self) -> None:
+        self.assertEqual(__, tuple(zip([1, 2], [10])))
+
+    def test_a_singleton_can_expand(self) -> None:
+        self.assertEqual(__, tuple((x, 10) for x in [1, 2]))
+
+    def test_rows_and_columns_can_expand_together(self) -> None:
+        self.assertEqual(add([[2]], [[1, 3]]), [[3, 5]])
+        self.assertEqual(add([[1], [3]], [[10, 20]]), [[11, 21], [13, 23]])
+
+    def test_two_cannot_broadcast_to_three(self) -> None:
+        # A singleton can expand, but a size of two cannot broadcast to three.
+        with self.assertRaises(ValueError):
+            add([[1, 2]], [[3, 4, 5]])
+
+    def test_totals_reduce_over_different_axes(self) -> None:
+        self.assertEqual(totals([1, 3], [10, 20]), ([32, 36], [24, 44]))
 
 
 T = TypeVar("T", bound="Addable")
@@ -57,18 +66,3 @@ def add(left: list[list[T]], right: list[list[T]]) -> list[list[T]]:
 def totals(offsets: list[float], calibration: list[float]) -> tuple[list[float], list[float]]:
     # Treat the offsets as a column and the calibration as a row.
     todo("combine both adjustments and reduce across stations and channels")
-
-
-def practice(t: TestCase, exercise: Exercise) -> None:
-    t.assertEqual(exercise.add([[2]], [[1, 3]]), [[3, 5]])
-    t.assertEqual(exercise.add([[1], [3]], [[10, 20]]), [[11, 21], [13, 23]])
-
-
-def practice_break(t: TestCase, exercise: Exercise) -> None:
-    # A singleton can expand, but a size of two cannot broadcast to three.
-    with t.assertRaises(ValueError):
-        exercise.add([[1, 2]], [[3, 4, 5]])
-
-
-def practice_transfer(t: TestCase, exercise: Exercise) -> None:
-    t.assertEqual(exercise.totals([1, 3], [10, 20]), ([32, 36], [24, 44]))

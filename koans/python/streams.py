@@ -12,21 +12,33 @@ from collections import deque
 from collections.abc import Iterable, Iterator
 from itertools import islice
 from typing import TypeVar
-from unittest import TestCase
 
-from koans import Exercise, __, todo
-
-
-def predict(t: TestCase, *answers: object) -> None:
-    source = iter([10, 20, 30])
-    expected: object = __
-    t.assertEqual(answers[0] if answers else expected, (tuple(islice(source, 2)), tuple(source)))
+from koans import Koan, __, todo
 
 
-def contrast(t: TestCase, *answers: object) -> None:
-    source = [10, 20, 30]
-    expected: object = __
-    t.assertEqual(answers[0] if answers else expected, (tuple(islice(source, 2)), tuple(source)))
+class AboutLazyStreams(Koan):
+    def test_reading_an_iterator_consumes_it(self) -> None:
+        source = iter([10, 20, 30])
+        self.assertEqual(__, (tuple(islice(source, 2)), tuple(source)))
+
+    def test_reading_a_list_allows_another_pass(self) -> None:
+        source = [10, 20, 30]
+        self.assertEqual(__, (tuple(islice(source, 2)), tuple(source)))
+
+    def test_adjacent_windows_overlap(self) -> None:
+        source = iter([2, 4, 8, 16])
+        iterator = windows(source, 3)
+        self.assertEqual(next(iterator), (2, 4, 8))
+        self.assertEqual(tuple(iterator), ((4, 8, 16),))
+
+    def test_invalid_width_leaves_input_unconsumed(self) -> None:
+        items = iter([1, 2])
+        with self.assertRaises(ValueError):
+            list(windows(items, 0))
+        self.assertEqual(next(items), 1)
+
+    def test_rise_indices_refer_to_the_left_item(self) -> None:
+        self.assertEqual(first_rises([7, 6, 9, 9, 12], 2), [1, 3])
 
 
 T = TypeVar("T")
@@ -47,21 +59,3 @@ def first_rises(readings: Iterable[float], limit: int) -> list[int]:
     adjacent = windows(readings, 2)
     # Count matching pairs, rather than taking the first limit pairs.
     todo("filter indexed pairs and stop after the requested number of rises")
-
-
-def practice(t: TestCase, exercise: Exercise) -> None:
-    source = iter([2, 4, 8, 16])
-    iterator = exercise.windows(source, 3)
-    t.assertEqual(next(iterator), (2, 4, 8))
-    t.assertEqual(tuple(iterator), ((4, 8, 16),))
-
-
-def practice_break(t: TestCase, exercise: Exercise) -> None:
-    items = iter([1, 2])
-    with t.assertRaises(ValueError):
-        list(exercise.windows(items, 0))
-    t.assertEqual(next(items), 1)
-
-
-def practice_transfer(t: TestCase, exercise: Exercise) -> None:
-    t.assertEqual(exercise.first_rises([7, 6, 9, 9, 12], 2), [1, 3])

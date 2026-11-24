@@ -10,24 +10,38 @@ Repeating completion is harmless. A missing job returns 404. No HTTP server
 is involved. Each instance describes a single-process, sequential API service."""
 
 from dataclasses import replace
-from unittest import TestCase
 
-from koans import Exercise, __, todo
+from koans import Koan, __, todo
 from koans.python._rest_service import Job, Response
 
 
-def predict(t: TestCase, *answers: object) -> None:
-    original = Job("1", "index")
-    alias = original
-    expected: object = __
-    t.assertEqual(answers[0] if answers else expected, (original.state, alias.state))
+class AboutRestResources(Koan):
+    def test_aliasing_keeps_the_resource_snapshot(self) -> None:
+        original = Job("1", "index")
+        alias = original
+        self.assertEqual(__, (original.state, alias.state))
 
+    def test_replacing_a_resource_produces_a_new_snapshot(self) -> None:
+        original = Job("1", "index")
+        updated = replace(original, state="complete")
+        self.assertEqual(__, (original.state, updated.state))
 
-def contrast(t: TestCase, *answers: object) -> None:
-    original = Job("1", "index")
-    updated = replace(original, state="complete")
-    expected: object = __
-    t.assertEqual(answers[0] if answers else expected, (original.state, updated.state))
+    def test_creating_a_job_supplies_a_location(self) -> None:
+        api = JobService()
+        create = api.submit("sample", "refresh index")
+        self.assertEqual(create, Response(201, Job("1", "refresh index"), "/jobs/1"))
+        self.assertEqual(api.get("1"), Response(200, Job("1", "refresh index")))
+
+    def test_a_replayed_key_cannot_change_its_input(self) -> None:
+        api = JobService()
+        self.assertEqual(api.submit("same", ""), Response(422))
+        self.assertEqual(api.submit("same", "refresh").job, Job("1", "refresh"))
+        self.assertEqual(api.submit("same", "different"), Response(409))
+
+    def test_completion_keeps_the_original_creation_snapshot(self) -> None:
+        api = JobService()
+        api.submit("first", "rebuild")
+        self.assertEqual(api.complete("1"), Response(200, Job("1", "rebuild", "complete")))
 
 
 class JobService:
@@ -53,23 +67,3 @@ class JobService:
         # Job is frozen. The creation response must keep its original snapshot.
         job = self._jobs.get(job_id)
         todo("replace the current snapshot and return the new representation")
-
-
-def practice(t: TestCase, exercise: Exercise) -> None:
-    api = exercise.JobService()
-    create = api.submit("sample", "refresh index")
-    t.assertEqual(create, Response(201, Job("1", "refresh index"), "/jobs/1"))
-    t.assertEqual(api.get("1"), Response(200, Job("1", "refresh index")))
-
-
-def practice_break(t: TestCase, exercise: Exercise) -> None:
-    api = exercise.JobService()
-    t.assertEqual(api.submit("same", ""), Response(422))
-    t.assertEqual(api.submit("same", "refresh").job, Job("1", "refresh"))
-    t.assertEqual(api.submit("same", "different"), Response(409))
-
-
-def practice_transfer(t: TestCase, exercise: Exercise) -> None:
-    api = exercise.JobService()
-    api.submit("first", "rebuild")
-    t.assertEqual(api.complete("1"), Response(200, Job("1", "rebuild", "complete")))

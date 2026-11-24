@@ -11,21 +11,31 @@ one output vector per timestep, retaining original order.
 """
 
 import math
-from unittest import TestCase
 
-from koans import Exercise, __, todo
-
-
-def predict(t: TestCase, *answers: object) -> None:
-    # Replacing a masked score with zero still gives it positive mass.
-    expected: object = __
-    t.assertEqual(answers[0] if answers else expected, tuple(math.exp(x) / 2 for x in (0, 0)))
+from koans import Koan, __, todo
 
 
-def contrast(t: TestCase, *answers: object) -> None:
-    weights = [math.exp(x) for x in (0, -math.inf)]
-    expected: object = __
-    t.assertEqual(answers[0] if answers else expected, tuple(x / sum(weights) for x in weights))
+class AboutAttentionMasks(Koan):
+    def test_zero_logits_keep_probability_mass(self) -> None:
+        # Replacing a masked score with zero still gives it positive mass.
+        self.assertEqual(__, tuple(math.exp(x) / 2 for x in (0, 0)))
+
+    def test_masked_logits_can_have_zero_mass(self) -> None:
+        weights = [math.exp(x) for x in (0, -math.inf)]
+        self.assertEqual(__, tuple(x / sum(weights) for x in weights))
+
+    def test_masked_values_do_not_affect_the_output(self) -> None:
+        output, weights = attend([1], [[1000], [1]], [[17], [3]], [False, True])
+        self.assertEqual(weights, [0, 1])
+        self.assertEqual(output, [3])
+
+    def test_all_masked_is_undefined(self) -> None:
+        # With no visible values there is no probability distribution.
+        with self.assertRaises(ValueError):
+            attend([1], [[1]], [[9]], [False])
+
+    def test_a_prefix_ignores_later_values(self) -> None:
+        self.assertEqual(causal_smooth([[0], [0]], [[2], [8]]), [[2], [5]])
 
 
 def _visible_weights(scores: list[float], keep: list[bool]) -> list[float]:
@@ -55,19 +65,3 @@ def attend(
 def causal_smooth(keys: list[list[float]], values: list[list[float]]) -> list[list[float]]:
     # Use each key as a query. Build one mask per query position.
     todo("collect a result for each prefix without reading future values")
-
-
-def practice(t: TestCase, exercise: Exercise) -> None:
-    output, weights = exercise.attend([1], [[1000], [1]], [[17], [3]], [False, True])
-    t.assertEqual(weights, [0, 1])
-    t.assertEqual(output, [3])
-
-
-def practice_break(t: TestCase, exercise: Exercise) -> None:
-    # With no visible values there is no probability distribution.
-    with t.assertRaises(ValueError):
-        exercise.attend([1], [[1]], [[9]], [False])
-
-
-def practice_transfer(t: TestCase, exercise: Exercise) -> None:
-    t.assertEqual(exercise.causal_smooth([[0], [0]], [[2], [8]]), [[2], [5]])

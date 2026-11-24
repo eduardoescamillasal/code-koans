@@ -12,21 +12,38 @@ scalar objects. Inputs are nonempty pairs with finite values.
 """
 
 from typing import Self
-from unittest import TestCase
 
-from koans import Exercise, __, todo
-
-
-def predict(t: TestCase, *answers: object) -> None:
-    # Central difference for x*x at x=3.
-    expected: object = __
-    t.assertEqual(answers[0] if answers else expected, (4**2 - 2**2) / (4 - 2))
+from koans import Koan, __, todo
 
 
-def contrast(t: TestCase, *answers: object) -> None:
-    # Here the second operand stays fixed.
-    expected: object = __
-    t.assertEqual(answers[0] if answers else expected, (4*3 - 2*3) / (4 - 2))
+class AboutReverseMode(Koan):
+    def test_both_operands_can_move_together(self) -> None:
+        # Central difference for x*x at x=3.
+        self.assertEqual(__, (4**2 - 2**2) / (4 - 2))
+
+    def test_holding_one_operand_fixed_changes_the_slope(self) -> None:
+        # Here the second operand stays fixed.
+        self.assertEqual(__, (4*3 - 2*3) / (4 - 2))
+
+    def test_both_edges_of_a_square_contribute(self) -> None:
+        x = Value(4)
+        self.assertEqual((x + x).data, 8)
+        z = x * x
+        self.assertEqual(z.data, 16)
+        z.backward()
+        self.assertEqual(x.grad, 8)
+
+    def test_backward_restarts_with_a_new_seed(self) -> None:
+        x = Value(2)
+        z = x * x
+        z.backward(3)
+        self.assertEqual(x.grad, 12)
+        z.backward(1)
+        self.assertEqual(x.grad, 4)
+
+    def test_one_gradient_step_moves_the_slope(self) -> None:
+        # At a slope of zero this single sample has a gradient of -8.
+        self.assertAlmostEqual(fit_slope([(1, 4)], 0.25, 1), 2)
 
 
 class Value:
@@ -72,26 +89,3 @@ def fit_slope(samples: list[tuple[float, float]], rate: float, steps: int) -> fl
         # Form one loss by summing squared residuals, then update once per pass.
         todo("build the loss, differentiate it, and update weight")
     return weight
-
-
-def practice(t: TestCase, exercise: Exercise) -> None:
-    x = exercise.Value(4)
-    t.assertEqual((x + x).data, 8)
-    z = x * x
-    t.assertEqual(z.data, 16)
-    z.backward()
-    t.assertEqual(x.grad, 8)
-
-
-def practice_break(t: TestCase, exercise: Exercise) -> None:
-    x = exercise.Value(2)
-    z = x * x
-    z.backward(3)
-    t.assertEqual(x.grad, 12)
-    z.backward(1)
-    t.assertEqual(x.grad, 4)
-
-
-def practice_transfer(t: TestCase, exercise: Exercise) -> None:
-    # At a slope of zero this single sample has a gradient of -8.
-    t.assertAlmostEqual(exercise.fit_slope([(1, 4)], 0.25, 1), 2)

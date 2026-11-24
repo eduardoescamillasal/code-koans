@@ -13,38 +13,55 @@ behavior. Jobs is an insertion-ordered mapping from name to async factory.
 import asyncio
 from collections.abc import Awaitable, Callable, Iterable, Mapping
 from typing import Literal, TypeVar, cast
-from unittest import TestCase
 
-from koans import Exercise, __, todo
-
-
-def predict(t: TestCase, *answers: object) -> None:
-    seen: list[str] = []
-
-    async def job() -> None:
-        seen.append("ran")
-    pending = job()
-    try:
-        expected: object = __
-        t.assertEqual(answers[0] if answers else expected, tuple(seen))
-    finally:
-        pending.close()
+from koans import Koan, __, todo
 
 
-def contrast(t: TestCase, *answers: object) -> None:
-    seen: list[str] = []
+class AboutAsyncScheduling(Koan):
+    def test_creating_a_coroutine_does_not_run_it(self) -> None:
+        seen: list[str] = []
 
-    async def job() -> None:
-        seen.append("ran")
+        async def job() -> None:
+            seen.append("ran")
+        pending = job()
+        try:
+            self.assertEqual(__, tuple(seen))
+        finally:
+            pending.close()
 
-    async def scenario() -> None:
-        task = asyncio.create_task(job())
-        t.assertEqual(seen, [])
-        await task
+    def test_awaiting_a_task_observes_its_work(self) -> None:
+        seen: list[str] = []
 
-    asyncio.run(scenario())
-    expected: object = __
-    t.assertEqual(answers[0] if answers else expected, tuple(seen))
+        async def job() -> None:
+            seen.append("ran")
+
+        async def scenario() -> None:
+            task = asyncio.create_task(job())
+            self.assertEqual(seen, [])
+            await task
+
+        asyncio.run(scenario())
+        self.assertEqual(__, tuple(seen))
+
+    def test_results_follow_submission_order(self) -> None:
+        async def immediate(value: int) -> int:
+            return value
+
+        result = asyncio.run(run_jobs([lambda: immediate(8), lambda: immediate(3)], 1))
+        self.assertEqual(result, [8, 3])
+
+    def test_empty_work_needs_no_workers(self) -> None:
+        # No workers should be needed for empty input.
+        self.assertEqual(asyncio.run(run_jobs([], 3)), [])
+        with self.assertRaises(ValueError):
+            asyncio.run(run_jobs([], 0))
+
+    def test_job_names_follow_their_outcomes(self) -> None:
+        async def work() -> str:
+            return "ok"
+
+        result = asyncio.run(collect_named({"one": work}, 1))
+        self.assertEqual(result, {"one": ("ok", "ok")})
 
 
 T = TypeVar("T")
@@ -77,26 +94,3 @@ async def collect_named(jobs: Mapping[str, Factory[T]], limit: int) -> dict[str,
         return attempt
 
     todo("schedule wrapped jobs and associate each outcome with its name")
-
-
-def practice(t: TestCase, exercise: Exercise) -> None:
-    async def immediate(value: int) -> int:
-        return value
-
-    result = asyncio.run(exercise.run_jobs([lambda: immediate(8), lambda: immediate(3)], 1))
-    t.assertEqual(result, [8, 3])
-
-
-def practice_break(t: TestCase, exercise: Exercise) -> None:
-    # No workers should be needed for empty input.
-    t.assertEqual(asyncio.run(exercise.run_jobs([], 3)), [])
-    with t.assertRaises(ValueError):
-        asyncio.run(exercise.run_jobs([], 0))
-
-
-def practice_transfer(t: TestCase, exercise: Exercise) -> None:
-    async def work() -> str:
-        return "ok"
-
-    result = asyncio.run(exercise.collect_named({"one": work}, 1))
-    t.assertEqual(result, {"one": ("ok", "ok")})

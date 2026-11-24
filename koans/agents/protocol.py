@@ -13,20 +13,31 @@ import json
 from collections.abc import Iterable
 import math
 from typing import Literal, TypedDict
-from unittest import TestCase
 
-from koans import Exercise, __, todo
-
-
-def predict(t: TestCase, *answers: object) -> None:
-    expected: object = __
-    t.assertEqual(answers[0] if answers else expected, json.loads('{"limit":1,"limit":9}')["limit"])
+from koans import Koan, __, todo
 
 
-def contrast(t: TestCase, *answers: object) -> None:
-    grouped = json.loads('{"limit":1,"limit":9}', object_pairs_hook=list)
-    expected: object = __
-    t.assertEqual(answers[0] if answers else expected, grouped)
+class AboutMessageValidation(Koan):
+    def test_default_json_keeps_the_last_duplicate(self) -> None:
+        self.assertEqual(__, json.loads('{"limit":1,"limit":9}')["limit"])
+
+    def test_an_object_hook_can_see_both_values(self) -> None:
+        grouped = json.loads('{"limit":1,"limit":9}', object_pairs_hook=list)
+        self.assertEqual(__, grouped)
+
+    def test_final_text_must_be_a_string(self) -> None:
+        self.assertEqual(parse('{"type":"final","text":"ok"}'), {"type": "final", "text": "ok"})
+        with self.assertRaises(ValueError):
+            parse('{"type":"final","text":7}')
+
+    def test_duplicate_tool_arguments_are_rejected(self) -> None:
+        with self.assertRaises(ValueError):
+            parse('{"type":"call","id":"a","name":"read","args":{"limit":1,"limit":2}}')
+
+    def test_only_final_text_goes_into_the_archive(self) -> None:
+        replies = ['{"type":"call","id":"a","name":"read","args":{}}',
+                   '{"type":"final","text":"ready"}']
+        self.assertEqual(archive_text(replies), ["ready"])
 
 
 Scalar = bool | int | float | str | None
@@ -81,20 +92,3 @@ def archive_text(replies: Iterable[str]) -> list[str]:
     archive: list[str] = []
     # Narrow the union using its type field before reading text.
     todo("validate every reply and collect final text in order")
-
-
-def practice(t: TestCase, exercise: Exercise) -> None:
-    t.assertEqual(exercise.parse('{"type":"final","text":"ok"}'), {"type": "final", "text": "ok"})
-    with t.assertRaises(ValueError):
-        exercise.parse('{"type":"final","text":7}')
-
-
-def practice_break(t: TestCase, exercise: Exercise) -> None:
-    with t.assertRaises(ValueError):
-        exercise.parse('{"type":"call","id":"a","name":"read","args":{"limit":1,"limit":2}}')
-
-
-def practice_transfer(t: TestCase, exercise: Exercise) -> None:
-    replies = ['{"type":"call","id":"a","name":"read","args":{}}',
-               '{"type":"final","text":"ready"}']
-    t.assertEqual(exercise.archive_text(replies), ["ready"])

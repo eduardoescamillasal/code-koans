@@ -2,20 +2,17 @@
 
 1. Identify the mechanism and a concrete misconception. Write down what the
    learner should be able to explain or build afterward.
-2. Add `koans/<track>/<module>.py` with a short contract and type annotations.
-   Put runnable examples in `predict(t: TestCase, *answers: object)` and
-   `contrast(t: TestCase, *answers: object)`. Set `expected: object = __` inside
-   each example. Compare `answers[0] if answers else expected` against the
-   observed behavior so maintainers can inject reference and mutant values.
-   Change one detail between the examples and ground the
-   contrast in a decision the learner will make while implementing the koan.
-3. Scaffold the implementation with small, local `todo("...")` calls. Provide
-   the surrounding control flow, fixtures, and helper signatures. Include
-   `practice`, `practice_break`, and `practice_transfer` in the learner file.
-   These functions take a `TestCase` and the exercise candidate and show concrete
-   calls, expected outputs, and edge conditions. Put independent `implement`,
-   `break_cases`, and `transfer` cases with the same signature under
-   `checks/<track>_<module>.py`. The runner executes visible practice first.
+2. Add one `About…(Koan)` class to `koans/<track>/<module>.py`. Name methods
+   after the behavior they demonstrate. The first two methods each use one
+   inline `self.assertEqual(__, ...)` and change a detail that matters for the
+   implementation. The runner follows declaration order.
+3. Follow with one or more small construction methods, then one boundary
+   method and one transfer method. Call the typed functions or classes
+   directly from those tests. Scaffold each exercise with local
+   `todo("...")` calls and enough surrounding code to make the next edit clear.
+   Put independent `implement`, `break_cases`, and `transfer` cases under
+   `checks/<track>_<module>.py`. Each takes a `TestCase` and a candidate
+   namespace. The runner executes the visible lesson methods first.
 4. Put the solved API and the two observation answers (`prediction` and
    `contrast`) under `maintainer/references/`. Put one targeted
    replacement per stage in `maintainer/mutants/` under the same module name.

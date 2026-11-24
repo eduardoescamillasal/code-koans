@@ -11,27 +11,49 @@ visible to other branches sharing that list in the fork.
 """
 
 from typing import TypeVar, cast
-from unittest import TestCase
 
-from koans import Exercise, __, todo
-
-
-def predict(t: TestCase, *answers: object) -> None:
-    row = {"count": 1}
-    original = [row]
-    alias = original
-    alias[0]["count"] += 1
-    expected: object = __
-    t.assertEqual(answers[0] if answers else expected, (original is alias, original[0]["count"]))
+from koans import Koan, __, todo
 
 
-def contrast(t: TestCase, *answers: object) -> None:
-    original = [{"count": 1}]
-    shallow = original[:]
-    shallow[0]["count"] = 8
-    shallow.append({})
-    expected: object = __
-    t.assertEqual(answers[0] if answers else expected, (shallow is original, len(original), original[0]["count"]))
+class AboutReferences(Koan):
+    def test_two_names_share_the_same_list(self) -> None:
+        row = {"count": 1}
+        original = [row]
+        alias = original
+        alias[0]["count"] += 1
+        self.assertEqual(__, (original is alias, original[0]["count"]))
+
+    def test_shallow_copies_share_their_children(self) -> None:
+        original = [{"count": 1}]
+        shallow = original[:]
+        shallow[0]["count"] = 8
+        shallow.append({})
+        self.assertEqual(__, (shallow is original, len(original), original[0]["count"]))
+
+    def test_an_immutable_leaf_needs_no_copy(self) -> None:
+        label = "sensor A"
+        self.assertIs(snapshot(label), label)
+
+    def test_snapshots_keep_internal_aliases(self) -> None:
+        child = [1]
+        state = [child, child]
+        copied = snapshot(state)
+        self.assertEqual(copied, [[1], [1]])
+        self.assertIs(copied[0], copied[1])
+        self.assertIsNot(copied[0], child)
+
+    def test_a_snapshot_can_contain_a_cycle(self) -> None:
+        root = {}
+        root["loop"] = root
+        fork = snapshot(root)
+        self.assertIsNot(fork, root)
+        self.assertIs(fork["loop"], fork)
+
+    def test_recording_a_point_leaves_the_input_alone(self) -> None:
+        state = {"north": {"points": [5]}}
+        updated = record(state, "north", 6)
+        self.assertEqual(updated["north"]["points"], [5, 6])
+        self.assertEqual(state["north"]["points"], [5])
 
 
 T = TypeVar("T")
@@ -59,27 +81,3 @@ def snapshot(root: T) -> T:
 def record(state: Timeline, branch: str, value: int) -> Timeline:
     # A branch contains a points list. Fork the state before adding the point.
     todo("fork the state, append the point, and return the fork")
-
-
-def practice(t: TestCase, exercise: Exercise) -> None:
-    child = [1]
-    state = [child, child]
-    copied = exercise.snapshot(state)
-    t.assertEqual(copied, [[1], [1]])
-    t.assertIs(copied[0], copied[1])
-    t.assertIsNot(copied[0], child)
-
-
-def practice_break(t: TestCase, exercise: Exercise) -> None:
-    root = {}
-    root["loop"] = root
-    fork = exercise.snapshot(root)
-    t.assertIsNot(fork, root)
-    t.assertIs(fork["loop"], fork)
-
-
-def practice_transfer(t: TestCase, exercise: Exercise) -> None:
-    state = {"north": {"points": [5]}}
-    updated = exercise.record(state, "north", 6)
-    t.assertEqual(updated["north"]["points"], [5, 6])
-    t.assertEqual(state["north"]["points"], [5])

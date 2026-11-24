@@ -10,35 +10,57 @@ constructor. Different schemas and subclasses must retain their own behavior.
 """
 
 from typing import Self, overload
-from unittest import TestCase
 
-from koans import Exercise, __, todo
-
-
-def predict(t: TestCase, *answers: object) -> None:
-    class NonData:
-        def __get__(self, instance: object, owner: type) -> str:
-            return "computed"
-
-    class Record:
-        value = NonData()
-
-    record = Record()
-    record.__dict__["value"] = "local"
-    expected: object = __
-    t.assertEqual(answers[0] if answers else expected, record.value)
+from koans import Koan, __, todo
 
 
-def contrast(t: TestCase, *answers: object) -> None:
-    class Record:
-        @property
-        def value(self) -> str:
-            return "computed"
+class AboutDescriptors(Koan):
+    def test_an_instance_can_shadow_a_nondata_descriptor(self) -> None:
+        class NonData:
+            def __get__(self, instance: object, owner: type) -> str:
+                return "computed"
 
-    record = Record()
-    record.__dict__["value"] = "local"
-    expected: object = __
-    t.assertEqual(answers[0] if answers else expected, record.value)
+        class Record:
+            value = NonData()
+
+        record = Record()
+        record.__dict__["value"] = "local"
+        self.assertEqual(__, record.value)
+
+    def test_a_property_takes_precedence(self) -> None:
+        class Record:
+            @property
+            def value(self) -> str:
+                return "computed"
+
+        record = Record()
+        record.__dict__["value"] = "local"
+        self.assertEqual(__, record.value)
+
+    def test_a_field_stores_values_per_instance(self) -> None:
+        class Reading:
+            value = bounded_int(1, 4)
+
+        first, second = Reading(), Reading()
+        first.value, second.value = 1, 4
+        self.assertEqual(first.value, 1)
+        self.assertEqual(second.value, 4)
+
+    def test_an_invalid_write_leaves_the_old_value_alone(self) -> None:
+        class Reading:
+            count = bounded_int(0, 1)
+
+        reading = Reading()
+        reading.count = 1
+        with self.assertRaises(ValueError):
+            reading.count = True
+        self.assertEqual(reading.count, 1)
+
+    def test_a_schema_creates_a_validated_attribute(self) -> None:
+        Reading = reading_type({"degrees": (-20, 50)})
+        reading = Reading()
+        reading.degrees = -20
+        self.assertEqual(reading.degrees, -20)
 
 
 class BoundedInt:
@@ -73,31 +95,3 @@ def reading_type(schema: dict[str, tuple[int, int]]) -> type:
     # For each name install a new descriptor. type(name, bases, namespace)
     # invokes __set_name__ on descriptors.
     todo("populate the class namespace and construct the reading type")
-
-
-def practice(t: TestCase, exercise: Exercise) -> None:
-    class Reading:
-        value = exercise.bounded_int(1, 4)
-
-    first, second = Reading(), Reading()
-    first.value, second.value = 1, 4
-    t.assertEqual(first.value, 1)
-    t.assertEqual(second.value, 4)
-
-
-def practice_break(t: TestCase, exercise: Exercise) -> None:
-    class Reading:
-        count = exercise.bounded_int(0, 1)
-
-    reading = Reading()
-    reading.count = 1
-    with t.assertRaises(ValueError):
-        reading.count = True
-    t.assertEqual(reading.count, 1)
-
-
-def practice_transfer(t: TestCase, exercise: Exercise) -> None:
-    Reading = exercise.reading_type({"degrees": (-20, 50)})
-    reading = Reading()
-    reading.degrees = -20
-    t.assertEqual(reading.degrees, -20)

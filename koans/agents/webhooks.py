@@ -18,30 +18,46 @@ moving to the next delivery. Return the final receipt for each delivery."""
 
 import hmac
 import json
-from unittest import TestCase
 
-from koans import Exercise, __, todo
+from koans import Koan, __, todo
 from koans.agents._webhooks import Delivery, Event, Processor, Receipt
+
+
+class AboutWebhookDelivery(Koan):
+    def test_equal_json_can_have_different_signatures(self) -> None:
+        left, right = b'{"amount":2}', b'{"amount": 2}'
+        self.assertEqual(__, (json.loads(left) == json.loads(right),
+                                  _sample_digest(left) == _sample_digest(right)))
+
+    def test_equal_reencoding_produces_equal_signatures(self) -> None:
+        left, right = b'{"amount":2}', b'{"amount": 2}'
+        reencoded = tuple(json.dumps(json.loads(body), separators=(",", ":")).encode("utf-8")
+                          for body in (left, right))
+        self.assertEqual(__, _sample_digest(reencoded[0]) == _sample_digest(reencoded[1]))
+
+    def test_a_valid_envelope_can_be_processed(self) -> None:
+        inbox = DeliveryInbox(b"demo", lambda event: event.amount * 2)
+        body = b'{"id":"sample","amount":2}'
+        signature = hmac.digest(b"demo", b"100." + body, "sha256").hex()
+        self.assertEqual(inbox.receive(Delivery(100, body, signature), 100), Receipt(200, 4))
+        self.assertEqual(inbox.receive(Delivery(100, body, "invalid"), 100), Receipt(401))
+
+    def test_rewriting_the_body_invalidates_the_signature(self) -> None:
+        inbox = DeliveryInbox(b"demo", lambda event: event.amount)
+        original = b'{"id":"sample","amount":2}'
+        signature = hmac.digest(b"demo", b"100." + original, "sha256").hex()
+        rewritten = b'{"id":"sample","amount": 2}'
+        self.assertEqual(inbox.receive(Delivery(100, rewritten, signature), 100), Receipt(401))
+
+    def test_batch_delivery_returns_a_receipt_per_event(self) -> None:
+        inbox = DeliveryInbox(b"demo", lambda event: event.amount)
+        bad = Delivery(100, b"{}", "invalid")
+        self.assertEqual(inbox.redrive((bad,), 100), (Receipt(401),))
 
 
 def _sample_digest(body: bytes) -> bytes:
     # A fixed example isolates the byte comparison from timestamps and retries.
     return hmac.digest(b"demo", body, "sha256")
-
-
-def predict(t: TestCase, *answers: object) -> None:
-    left, right = b'{"amount":2}', b'{"amount": 2}'
-    expected: object = __
-    t.assertEqual(answers[0] if answers else expected, (json.loads(left) == json.loads(right),
-                              _sample_digest(left) == _sample_digest(right)))
-
-
-def contrast(t: TestCase, *answers: object) -> None:
-    left, right = b'{"amount":2}', b'{"amount": 2}'
-    reencoded = tuple(json.dumps(json.loads(body), separators=(",", ":")).encode("utf-8")
-                      for body in (left, right))
-    expected: object = __
-    t.assertEqual(answers[0] if answers else expected, _sample_digest(reencoded[0]) == _sample_digest(reencoded[1]))
 
 
 class DeliveryInbox:
@@ -80,25 +96,3 @@ class DeliveryInbox:
         for delivery in deliveries:
             todo("record each receipt after at most one transient retry")
         return tuple(receipts)
-
-
-def practice(t: TestCase, exercise: Exercise) -> None:
-    inbox = exercise.DeliveryInbox(b"demo", lambda event: event.amount * 2)
-    body = b'{"id":"sample","amount":2}'
-    signature = hmac.digest(b"demo", b"100." + body, "sha256").hex()
-    t.assertEqual(inbox.receive(Delivery(100, body, signature), 100), Receipt(200, 4))
-    t.assertEqual(inbox.receive(Delivery(100, body, "invalid"), 100), Receipt(401))
-
-
-def practice_break(t: TestCase, exercise: Exercise) -> None:
-    inbox = exercise.DeliveryInbox(b"demo", lambda event: event.amount)
-    original = b'{"id":"sample","amount":2}'
-    signature = hmac.digest(b"demo", b"100." + original, "sha256").hex()
-    rewritten = b'{"id":"sample","amount": 2}'
-    t.assertEqual(inbox.receive(Delivery(100, rewritten, signature), 100), Receipt(401))
-
-
-def practice_transfer(t: TestCase, exercise: Exercise) -> None:
-    inbox = exercise.DeliveryInbox(b"demo", lambda event: event.amount)
-    bad = Delivery(100, b"{}", "invalid")
-    t.assertEqual(inbox.redrive((bad,), 100), (Receipt(401),))

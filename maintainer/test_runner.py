@@ -27,7 +27,7 @@ class RunnerTests(unittest.TestCase):
         self.assertIn("koans/python/references.py · predict", result.stderr)
         self.assertIn("__ (fill in your prediction) != (True, 2)", result.stderr)
         self.assertIn("Ran 1 test", result.stderr)
-        self.assertNotIn("test_contrast", result.stderr)
+        self.assertNotIn("test_shallow_copies_share_their_children", result.stderr)
 
     def test_selected_module(self):
         result = self.run_cli("agents", "runtime")
@@ -49,14 +49,14 @@ class RunnerTests(unittest.TestCase):
             shutil.copyfile(ROOT / "contemplate.py", root / "contemplate.py")
             learner = root / "koans/python/closures.py"
             source = learner.read_text()
-            learner.write_text(source.replace("expected: object = __", "expected: object = (7, 7, 7)", 1))
+            learner.write_text(source.replace("self.assertEqual(__,", "self.assertEqual((7, 7, 7),", 1))
             contrast = self.run_cli("python", "closures", cwd=root)
             self.assertIn("closures.py · contrast ... FAIL", contrast.stderr)
             self.assertIn("Ran 2 tests", contrast.stderr)
 
-            learner.write_text(learner.read_text().replace("expected: object = __", "expected: object = (7, 7)", 1))
+            learner.write_text(learner.read_text().replace("self.assertEqual(__,", "self.assertEqual((7, 7),", 1))
             scaffold = self.run_cli("python", "closures", cwd=root)
             self.assertEqual(scaffold.returncode, 1)
             self.assertIn("closures.py · implement ... FAIL", scaffold.stderr)
-            self.assertIn("Implement look up the call key", scaffold.stderr)
+            self.assertIn("Implement build a hashable key", scaffold.stderr)
             self.assertIn("Ran 3 tests", scaffold.stderr)

@@ -9,22 +9,36 @@ For transfer, route Claude first, falling back to Azure once only on 429 or
 503. Propagate other errors immediately. These payloads are fixtures; live
 SDKs wrap them in additional fields and have their own schemas."""
 
-from unittest import TestCase
 
-from koans import Exercise, __, todo
+from koans import Koan, __, todo
 from koans.agents._providers import Message, Payload, Provider, ProviderError, Reply, Transport
 
 
-def predict(t: TestCase, *answers: object) -> None:
-    payload = {"system": "policy", "messages": [{"role": "user"}]}
-    expected: object = __
-    t.assertEqual(answers[0] if answers else expected, tuple(msg["role"] for msg in payload["messages"]))
+class AboutProviderAdapters(Koan):
+    def test_claude_policy_lives_outside_message_history(self) -> None:
+        payload = {"system": "policy", "messages": [{"role": "user"}]}
+        self.assertEqual(__, tuple(msg["role"] for msg in payload["messages"]))
 
+    def test_azure_history_can_start_with_policy(self) -> None:
+        history = [{"role": "system"}, {"role": "user"}]
+        self.assertEqual(__, tuple(msg["role"] for msg in history))
 
-def contrast(t: TestCase, *answers: object) -> None:
-    history = [{"role": "system"}, {"role": "user"}]
-    expected: object = __
-    t.assertEqual(answers[0] if answers else expected, tuple(msg["role"] for msg in history))
+    def test_the_adapter_combines_usage_counters(self) -> None:
+        client = ProviderClient(_ClaudeSample())
+        self.assertEqual(client.call("claude", "policy", (Message("user", "hello"),)),
+                      Reply("claude", "example", 5))
+
+    def test_token_counts_do_not_accept_booleans(self) -> None:
+        class Malformed:
+            def send(self, provider: Provider, payload: Payload) -> dict[str, object]:
+                return {"content": "text", "input_tokens": True, "output_tokens": 2}
+
+        with self.assertRaises(ValueError):
+            ProviderClient(Malformed()).call("claude", "policy", ())
+
+    def test_throttling_can_select_the_backup(self) -> None:
+        client = ProviderClient(_FallbackSample())
+        self.assertEqual(client.answer("policy", ()), Reply("azure", "backup", 3))
 
 
 class ProviderClient:
@@ -61,23 +75,3 @@ class _FallbackSample:
         if provider == "claude":
             raise ProviderError(429)
         return {"text": "backup", "prompt_tokens": 1, "completion_tokens": 2}
-
-
-def practice(t: TestCase, exercise: Exercise) -> None:
-    client = exercise.ProviderClient(_ClaudeSample())
-    t.assertEqual(client.call("claude", "policy", (Message("user", "hello"),)),
-                  Reply("claude", "example", 5))
-
-
-def practice_break(t: TestCase, exercise: Exercise) -> None:
-    class Malformed:
-        def send(self, provider: Provider, payload: Payload) -> dict[str, object]:
-            return {"content": "text", "input_tokens": True, "output_tokens": 2}
-
-    with t.assertRaises(ValueError):
-        exercise.ProviderClient(Malformed()).call("claude", "policy", ())
-
-
-def practice_transfer(t: TestCase, exercise: Exercise) -> None:
-    client = exercise.ProviderClient(_FallbackSample())
-    t.assertEqual(client.answer("policy", ()), Reply("azure", "backup", 3))

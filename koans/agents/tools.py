@@ -13,19 +13,40 @@ trusted and preview itself does not raise these validation exceptions.
 
 from collections.abc import Callable, Iterable, Mapping, Set
 from typing import Literal
-from unittest import TestCase
 
-from koans import Exercise, __, todo
-
-
-def predict(t: TestCase, *answers: object) -> None:
-    expected: object = __
-    t.assertEqual(answers[0] if answers else expected, isinstance(True, int))
+from koans import Koan, __, todo
 
 
-def contrast(t: TestCase, *answers: object) -> None:
-    expected: object = __
-    t.assertEqual(answers[0] if answers else expected, type(True) is int)
+class AboutToolPermissions(Koan):
+    def test_booleans_are_integer_instances(self) -> None:
+        self.assertEqual(__, isinstance(True, int))
+
+    def test_exact_types_reject_booleans_as_integers(self) -> None:
+        self.assertEqual(__, type(True) is int)
+
+    def test_a_registered_tool_still_needs_permission(self) -> None:
+        def preview(qty: int) -> int:
+            return qty + 2
+
+        registry = {"preview": ({"qty": int}, preview)}
+        self.assertEqual(dispatch(registry, {"preview"}, "preview", {"qty": 5}), 7)
+        with self.assertRaises(PermissionError):
+            dispatch(registry, set(), "preview", {"qty": 5})
+
+    def test_invalid_arguments_do_not_invoke_a_tool(self) -> None:
+        invoked: list[int] = []
+
+        def write(count: int) -> None:
+            invoked.append(count)
+
+        with self.assertRaises(ValueError):
+            dispatch({"write": ({"count": int}, write)}, {"write"}, "write", {"count": True})
+        self.assertEqual(invoked, [])
+
+    def test_preview_results_distinguish_rejection(self) -> None:
+        registry: Registry = {"preview": ({"qty": int}, lambda qty: abs(qty))}
+        batch = [("preview", {"qty": -4}), ("missing", {})]
+        self.assertEqual(preview_batch(registry, batch), [("ok", 4), ("rejected", None)])
 
 
 Registry = Mapping[str, tuple[Mapping[str, type], Callable[..., object]]]
@@ -46,30 +67,3 @@ def preview_batch(registry: Registry, requests: Iterable[tuple[str, Arguments]])
     for name, args in requests:
         todo("dispatch one read-only request and distinguish rejection from success")
     return outcomes
-
-
-def practice(t: TestCase, exercise: Exercise) -> None:
-    def preview(qty: int) -> int:
-        return qty + 2
-
-    registry = {"preview": ({"qty": int}, preview)}
-    t.assertEqual(exercise.dispatch(registry, {"preview"}, "preview", {"qty": 5}), 7)
-    with t.assertRaises(PermissionError):
-        exercise.dispatch(registry, set(), "preview", {"qty": 5})
-
-
-def practice_break(t: TestCase, exercise: Exercise) -> None:
-    invoked: list[int] = []
-
-    def write(count: int) -> None:
-        invoked.append(count)
-
-    with t.assertRaises(ValueError):
-        exercise.dispatch({"write": ({"count": int}, write)}, {"write"}, "write", {"count": True})
-    t.assertEqual(invoked, [])
-
-
-def practice_transfer(t: TestCase, exercise: Exercise) -> None:
-    registry: Registry = {"preview": ({"qty": int}, lambda qty: abs(qty))}
-    batch = [("preview", {"qty": -4}), ("missing", {})]
-    t.assertEqual(exercise.preview_batch(registry, batch), [("ok", 4), ("rejected", None)])

@@ -10,21 +10,32 @@ import json
 import math
 from collections.abc import Sequence
 from koans.agents.runtime import Context, Report
-from unittest import TestCase
 
-from koans import Exercise, __, todo
-
-
-def predict(t: TestCase, *answers: object) -> None:
-    weight, gradient, rate = 0.0, -6.0, 0.0
-    expected: object = __
-    t.assertEqual(answers[0] if answers else expected, weight - rate * gradient)
+from koans import Koan, __, todo
 
 
-def contrast(t: TestCase, *answers: object) -> None:
-    weight, gradient, rate = 0.0, -6.0, 0.25
-    expected: object = __
-    t.assertEqual(answers[0] if answers else expected, weight - rate * gradient)
+class AboutTrainingDiagnosis(Koan):
+    def test_zero_learning_rate_freezes_the_weight(self) -> None:
+        weight, gradient, rate = 0.0, -6.0, 0.0
+        self.assertEqual(__, weight - rate * gradient)
+
+    def test_a_nonzero_rate_moves_the_weight(self) -> None:
+        weight, gradient, rate = 0.0, -6.0, 0.25
+        self.assertEqual(__, weight - rate * gradient)
+
+    def test_loss_and_gradient_identify_two_training_outcomes(self) -> None:
+        self.assertEqual(diagnose([(10, -1), (5, -1)]), "loss decreasing")
+        self.assertEqual(diagnose([(10, 0), (10, 0)]), "inspect gradient")
+
+    def test_invalid_samples_cannot_be_diagnosed(self) -> None:
+        with self.assertRaises(ValueError):
+            diagnose([(2, 3), (float("nan"), 1)])
+        self.assertEqual(diagnose([(2, -1), (3, 2)]), "reduce learning rate")
+
+    def test_the_agent_reads_the_trace_with_read_only_tools(self) -> None:
+        status, text, events = training_report(0)
+        self.assertEqual((status, text), ("final", "check learning rate"))
+        self.assertEqual([event["ok"] for event in events], [False, True])
 
 
 Trace = Sequence[tuple[float, float]]
@@ -67,20 +78,3 @@ def training_report(rate: float) -> Report:
     # Register both tools but allow inspect only. Bind the parser, tool dispatcher,
     # selected document text, and scripted model into one runtime call.
     todo("wire the typed runtime and return its report")
-
-
-def practice(t: TestCase, exercise: Exercise) -> None:
-    t.assertEqual(exercise.diagnose([(10, -1), (5, -1)]), "loss decreasing")
-    t.assertEqual(exercise.diagnose([(10, 0), (10, 0)]), "inspect gradient")
-
-
-def practice_break(t: TestCase, exercise: Exercise) -> None:
-    with t.assertRaises(ValueError):
-        exercise.diagnose([(2, 3), (float("nan"), 1)])
-    t.assertEqual(exercise.diagnose([(2, -1), (3, 2)]), "reduce learning rate")
-
-
-def practice_transfer(t: TestCase, exercise: Exercise) -> None:
-    status, text, events = exercise.training_report(0)
-    t.assertEqual((status, text), ("final", "check learning rate"))
-    t.assertEqual([event["ok"] for event in events], [False, True])

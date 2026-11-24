@@ -3,14 +3,26 @@
 from importlib import import_module
 from types import SimpleNamespace
 import unittest
+from unittest.mock import patch
 
-from checks import STAGES, TRACKS, load_exercise, load_module, make_case
+from checks import STAGES, TRACKS, load_exercise, load_module, make_cases
 from koans import __
 
 
 def outcome(check, examples, exercise, stage):
     result = unittest.TestResult()
-    make_case(check, examples, exercise, stage).run(result)
+    result.failfast = True
+    case = unittest.TestSuite(make_cases(check, examples, exercise, stage))
+    if exercise is examples:
+        case.run(result)
+    elif stage in STAGES[:2]:
+        field = "prediction" if stage == "predict" else "contrast"
+        with patch.object(examples, "__", getattr(exercise, field)):
+            case.run(result)
+    else:
+        bindings = {key: value for key, value in vars(exercise).items() if not key.startswith("__")}
+        with patch.dict(vars(examples), bindings):
+            case.run(result)
     if result.errors:
         return "error", result.errors[0][1]
     if result.failures:

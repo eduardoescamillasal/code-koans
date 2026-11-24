@@ -9,25 +9,35 @@ columns. Each map consumes the output of the preceding map and may change the
 number of coordinates. An empty sequence leaves the input unchanged.
 """
 
-from unittest import TestCase
 
-from koans import Exercise, __, todo
-
-
-def predict(t: TestCase, *answers: object) -> None:
-    # Double x, then add x to y.
-    x, y = 2, 3
-    x = 2 * x
-    expected: object = __
-    t.assertEqual(answers[0] if answers else expected, (x, x + y))
+from koans import Koan, __, todo
 
 
-def contrast(t: TestCase, *answers: object) -> None:
-    # Add x to y, then double x.
-    x, y = 2, 3
-    y = x + y
-    expected: object = __
-    t.assertEqual(answers[0] if answers else expected, (2 * x, y))
+class AboutLinearMaps(Koan):
+    def test_scaling_before_shearing(self) -> None:
+        # Double x, then add x to y.
+        x, y = 2, 3
+        x = 2 * x
+        self.assertEqual(__, (x, x + y))
+
+    def test_shearing_before_scaling(self) -> None:
+        # Add x to y, then double x.
+        x, y = 2, 3
+        y = x + y
+        self.assertEqual(__, (2 * x, y))
+
+    def test_rows_multiply_columns(self) -> None:
+        self.assertEqual(matmul([[2, 3]], [[5], [-1]]), [[7]])
+        self.assertEqual(matmul([[1, 0], [0, 1]], [[9], [8]]), [[9], [8]])
+
+    def test_incompatible_dimensions_are_rejected(self) -> None:
+        # zip alone would silently drop a coordinate.
+        with self.assertRaises(ValueError):
+            matmul([[3, 4]], [[2]])
+
+    def test_maps_consume_the_previous_output(self) -> None:
+        points = [[2], [3]]
+        self.assertEqual(transform(points, [[[1, 1]], [[4]]]), [[20]])
 
 
 Matrix = list[list[float]]
@@ -58,19 +68,3 @@ def matmul(left: Matrix, right: Matrix) -> Matrix:
 def transform(displacements: Matrix, maps: list[Matrix]) -> Matrix:
     # Each map acts on the result left behind by the previous map.
     todo("apply the maps in sequence to the column vectors")
-
-
-def practice(t: TestCase, exercise: Exercise) -> None:
-    t.assertEqual(exercise.matmul([[2, 3]], [[5], [-1]]), [[7]])
-    t.assertEqual(exercise.matmul([[1, 0], [0, 1]], [[9], [8]]), [[9], [8]])
-
-
-def practice_break(t: TestCase, exercise: Exercise) -> None:
-    # zip alone would silently drop a coordinate.
-    with t.assertRaises(ValueError):
-        exercise.matmul([[3, 4]], [[2]])
-
-
-def practice_transfer(t: TestCase, exercise: Exercise) -> None:
-    points = [[2], [3]]
-    t.assertEqual(exercise.transform(points, [[[1, 1]], [[4]]]), [[20]])
