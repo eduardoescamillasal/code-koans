@@ -1,20 +1,7 @@
-from dataclasses import replace
 from types import SimpleNamespace
 from unittest import TestCase
 
 from koans.python._rest_service import Job, Response
-
-
-def predict(t: TestCase, s: SimpleNamespace) -> None:
-    original = Job("1", "index")
-    alias = original
-    t.assertEqual(s.prediction, (original.state, alias.state))
-
-
-def contrast(t: TestCase, s: SimpleNamespace) -> None:
-    original = Job("1", "index")
-    updated = replace(original, state="complete")
-    t.assertEqual(s.contrast, (original.state, updated.state))
 
 
 def implement(t: TestCase, s: SimpleNamespace) -> None:

@@ -11,15 +11,65 @@ argument errors. Unexpected exceptions propagate. The supplied registry is
 trusted and preview itself does not raise these validation exceptions.
 """
 
-from koans import __
+from collections.abc import Callable, Iterable, Mapping, Set
+from typing import Literal
+from unittest import TestCase
 
-prediction = __
-contrast = __
-
-
-def dispatch(registry, allowed, name, args):
-    raise AssertionError("Implement tools")
+from koans import Exercise, __, todo
 
 
-def preview_batch(registry, requests):
-    raise AssertionError("Implement preview_batch")
+def predict(t: TestCase, *answers: object) -> None:
+    expected: object = __
+    t.assertEqual(answers[0] if answers else expected, isinstance(True, int))
+
+
+def contrast(t: TestCase, *answers: object) -> None:
+    expected: object = __
+    t.assertEqual(answers[0] if answers else expected, type(True) is int)
+
+
+Registry = Mapping[str, tuple[Mapping[str, type], Callable[..., object]]]
+Arguments = Mapping[str, object]
+Outcome = tuple[Literal["ok", "rejected"], object]
+
+
+def dispatch(registry: Registry, allowed: Set[str], name: str, args: Arguments) -> object:
+    if name not in allowed or name not in registry:
+        raise PermissionError("tool unavailable")
+    schema, tool = registry[name]
+    # A value like True is an int subclass, but the schema requires exact types.
+    todo("validate argument names and exact types before calling the tool")
+
+
+def preview_batch(registry: Registry, requests: Iterable[tuple[str, Arguments]]) -> list[Outcome]:
+    outcomes: list[Outcome] = []
+    for name, args in requests:
+        todo("dispatch one read-only request and distinguish rejection from success")
+    return outcomes
+
+
+def practice(t: TestCase, exercise: Exercise) -> None:
+    def preview(qty: int) -> int:
+        return qty + 2
+
+    registry = {"preview": ({"qty": int}, preview)}
+    t.assertEqual(exercise.dispatch(registry, {"preview"}, "preview", {"qty": 5}), 7)
+    with t.assertRaises(PermissionError):
+        exercise.dispatch(registry, set(), "preview", {"qty": 5})
+
+
+def practice_break(t: TestCase, exercise: Exercise) -> None:
+    invoked: list[int] = []
+
+    def write(count: int) -> None:
+        invoked.append(count)
+
+    with t.assertRaises(ValueError):
+        exercise.dispatch({"write": ({"count": int}, write)}, {"write"}, "write", {"count": True})
+    t.assertEqual(invoked, [])
+
+
+def practice_transfer(t: TestCase, exercise: Exercise) -> None:
+    registry: Registry = {"preview": ({"qty": int}, lambda qty: abs(qty))}
+    batch = [("preview", {"qty": -4}), ("missing", {})]
+    t.assertEqual(exercise.preview_batch(registry, batch), [("ok", 4), ("rejected", None)])

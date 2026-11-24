@@ -1,6 +1,5 @@
 from dataclasses import replace
 import hmac
-import json
 from types import SimpleNamespace
 from unittest import TestCase
 
@@ -12,19 +11,6 @@ SECRET = b"fixture only"
 def sign(body: bytes, timestamp: int = 100) -> Delivery:
     signed = str(timestamp).encode("ascii") + b"." + body
     return Delivery(timestamp, body, hmac.digest(SECRET, signed, "sha256").hex())
-
-
-def predict(t: TestCase, s: SimpleNamespace) -> None:
-    left, right = b'{"amount":2}', b'{"amount": 2}'
-    t.assertEqual(s.prediction, (json.loads(left) == json.loads(right),
-                              sign(left).signature == sign(right).signature))
-
-
-def contrast(t: TestCase, s: SimpleNamespace) -> None:
-    left, right = b'{"amount":2}', b'{"amount": 2}'
-    reencoded = tuple(json.dumps(json.loads(body), separators=(",", ":")).encode("utf-8")
-                      for body in (left, right))
-    t.assertEqual(s.contrast, sign(reencoded[0]).signature == sign(reencoded[1]).signature)
 
 
 def implement(t: TestCase, s: SimpleNamespace) -> None:

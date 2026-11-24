@@ -1,14 +1,3 @@
-from itertools import islice
-
-
-def predict(t, s):
-    source = iter([10, 20, 30])
-    t.assertEqual(s.prediction, (tuple(islice(source, 2)), tuple(source)))
-
-
-def contrast(t, s):
-    source = [10, 20, 30]
-    t.assertEqual(s.contrast, (tuple(islice(source, 2)), tuple(source)))
 
 
 def implement(t, s):

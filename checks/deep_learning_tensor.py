@@ -1,11 +1,3 @@
-def predict(t, s):
-    t.assertEqual(s.prediction, tuple(zip([1, 2], [10])))
-
-
-def contrast(t, s):
-    t.assertEqual(s.contrast, tuple((x, 10) for x in [1, 2]))
-
-
 def implement(t, s):
     t.assertEqual(s.add([[1], [2]], [[10, 20, 30]]), [[11, 21, 31], [12, 22, 32]])
     t.assertEqual(s.add([[10, 20]], [[1, 2]]), [[11, 22]])

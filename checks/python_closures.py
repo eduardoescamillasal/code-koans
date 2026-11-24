@@ -1,13 +1,3 @@
-def predict(t, s):
-    captures = [lambda: i for i in range(3)]
-    t.assertEqual(s.prediction, tuple(f() for f in captures))
-
-
-def contrast(t, s):
-    captures = [lambda i=i: i for i in range(3)]
-    t.assertEqual(s.contrast, tuple(f() for f in captures))
-
-
 def implement(t, s):
     calls = []
     def f(a, b):

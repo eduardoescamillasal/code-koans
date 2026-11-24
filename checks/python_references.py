@@ -1,19 +1,3 @@
-def predict(t, s):
-    row = {"count": 1}
-    original = [row]
-    alias = original
-    alias[0]["count"] += 1
-    t.assertEqual(s.prediction, (original is alias, original[0]["count"]))
-
-
-def contrast(t, s):
-    original = [{"count": 1}]
-    shallow = original[:]
-    shallow[0]["count"] = 8
-    shallow.append({})
-    t.assertEqual(s.contrast, (shallow is original, len(original), original[0]["count"]))
-
-
 def implement(t, s):
     source = [{"count": 2}]
     copy = s.snapshot(source)

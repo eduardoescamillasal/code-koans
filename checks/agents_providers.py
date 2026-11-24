@@ -18,16 +18,6 @@ class FakeTransport:
         return reply
 
 
-def predict(t: TestCase, s: SimpleNamespace) -> None:
-    payload = {"system": "policy", "messages": [{"role": "user"}]}
-    t.assertEqual(s.prediction, tuple(msg["role"] for msg in payload["messages"]))
-
-
-def contrast(t: TestCase, s: SimpleNamespace) -> None:
-    history = [{"role": "system"}, {"role": "user"}]
-    t.assertEqual(s.contrast, tuple(msg["role"] for msg in history))
-
-
 def implement(t: TestCase, s: SimpleNamespace) -> None:
     transport = FakeTransport([
         {"content": "A", "input_tokens": 4, "output_tokens": 2},

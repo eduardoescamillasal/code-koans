@@ -2,18 +2,22 @@
 
 1. Identify the mechanism and a concrete misconception. Write down what the
    learner should be able to explain or build afterward.
-2. Add `koans/<track>/<module>.py` with the objective and contract in its
-   docstring. Document expected types, bounds, edge cases, platform assumptions,
-   and any time or space constraints. Leave `prediction` and `contrast` set to
-   the shared `__` marker. Put an `AssertionError("Implement ...")` inside each
-   unfinished entry point so the module imports cleanly.
-3. In `checks/<track>_<module>.py`, define `predict`, `contrast`, `implement`,
-   `break_cases`, and `transfer`. Each takes a `unittest.TestCase` and a module
-   or namespace exposing the exercise API. Use the same checks for starter and
-   reference. Make the first two stages similar enough that one local change
-   exposes the mechanism. Give transfer its own problem and learner entry
-   point, with independent fixtures.
-4. Put the solved API under `maintainer/references/`. Put one targeted
+2. Add `koans/<track>/<module>.py` with a short contract and type annotations.
+   Put runnable examples in `predict(t: TestCase, *answers: object)` and
+   `contrast(t: TestCase, *answers: object)`. Set `expected: object = __` inside
+   each example. Compare `answers[0] if answers else expected` against the
+   observed behavior so maintainers can inject reference and mutant values.
+   Change one detail between the examples and ground the
+   contrast in a decision the learner will make while implementing the koan.
+3. Scaffold the implementation with small, local `todo("...")` calls. Provide
+   the surrounding control flow, fixtures, and helper signatures. Include
+   `practice`, `practice_break`, and `practice_transfer` in the learner file.
+   These functions take a `TestCase` and the exercise candidate and show concrete
+   calls, expected outputs, and edge conditions. Put independent `implement`,
+   `break_cases`, and `transfer` cases with the same signature under
+   `checks/<track>_<module>.py`. The runner executes visible practice first.
+4. Put the solved API and the two observation answers (`prediction` and
+   `contrast`) under `maintainer/references/`. Put one targeted
    replacement per stage in `maintainer/mutants/` under the same module name.
    The `CASES` mapping contains stage names and field overrides for the
    reference namespace. Use wrong results a learner might reasonably produce,

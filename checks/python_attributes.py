@@ -1,27 +1,3 @@
-def predict(t, s):
-    class NonData:
-        def __get__(self, instance, owner):
-            return "computed"
-
-    class Record:
-        value = NonData()
-
-    record = Record()
-    record.__dict__["value"] = "local"
-    t.assertEqual(s.prediction, record.value)
-
-
-def contrast(t, s):
-    class Record:
-        @property
-        def value(self):
-            return "computed"
-
-    record = Record()
-    record.__dict__["value"] = "local"
-    t.assertEqual(s.contrast, record.value)
-
-
 def implement(t, s):
     field = s.bounded_int(0, 10)
     class Record:

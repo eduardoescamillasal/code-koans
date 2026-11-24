@@ -1,15 +1,6 @@
 import json
 
 
-def predict(t, s):
-    t.assertEqual(s.prediction, json.loads('{"limit":1,"limit":9}')["limit"])
-
-
-def contrast(t, s):
-    grouped = json.loads('{"limit":1,"limit":9}', object_pairs_hook=list)
-    t.assertEqual(s.contrast, grouped)
-
-
 def implement(t, s):
     raw = '{"type":"call","id":"c1","name":"lookup","args":{"count":2,"prefix":"ab"}}'
     t.assertEqual(s.parse(raw), {"type": "call", "id": "c1", "name": "lookup",

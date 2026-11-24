@@ -12,26 +12,6 @@ async def unchecked(factories, limit):
 async def detach(factories, limit):
     await asyncio.shield(unchecked(factories, limit))
 
-import asyncio
-
-
-def predict(t, s):
-    seen = []
-    async def job():
-        seen.append("ran")
-    pending = job()
-    try:
-        t.assertEqual(s.prediction, tuple(seen))
-    finally:
-        pending.close()
-
-
-def contrast(t, s):
-    seen = []
-    async def job():
-        seen.append("ran")
-    asyncio.run(job())
-    t.assertEqual(s.contrast, tuple(seen))
 
 
 def implement(t, s):

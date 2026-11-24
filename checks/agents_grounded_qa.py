@@ -22,14 +22,6 @@ class MockGenerator:
         return self.answers[question]
 
 
-def predict(t: TestCase, s: SimpleNamespace) -> None:
-    t.assertEqual(s.prediction, {"archived"} <= {"selected", "archived"})
-
-
-def contrast(t: TestCase, s: SimpleNamespace) -> None:
-    t.assertEqual(s.contrast, {"archived"} <= {"selected"})
-
-
 def implement(t: TestCase, s: SimpleNamespace) -> None:
     one, two, three = Document("a", "123"), Document("b", "too long"), Document("c", "xx")
     generator = MockGenerator({"q": Answer("result", ("a", "c"))})

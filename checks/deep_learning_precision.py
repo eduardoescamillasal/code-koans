@@ -1,14 +1,6 @@
 import math
 
 
-def predict(t, s):
-    t.assertEqual(s.prediction, (1e16 + 1.0) - 1e16)
-
-
-def contrast(t, s):
-    t.assertEqual(s.contrast, (1.0 + 1.0) - 1.0)
-
-
 def implement(t, s):
     loss, gradient = s.cross_entropy([math.log(2), 0, 0], 1)
     t.assertAlmostEqual(loss, math.log(4))

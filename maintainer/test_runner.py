@@ -1,8 +1,10 @@
 """Regression checks for the learner CLI entry point."""
 
 from pathlib import Path
+import shutil
 import subprocess
 import sys
+from tempfile import TemporaryDirectory
 import unittest
 
 
@@ -10,10 +12,10 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 class RunnerTests(unittest.TestCase):
-    def run_cli(self, *args):
+    def run_cli(self, *args: str, cwd: Path = ROOT) -> subprocess.CompletedProcess[str]:
         return subprocess.run(
             [sys.executable, "contemplate.py", *args],
-            cwd=ROOT,
+            cwd=cwd,
             capture_output=True,
             text=True,
             timeout=5,
@@ -37,3 +39,24 @@ class RunnerTests(unittest.TestCase):
         result = self.run_cli("python", "runtime")
         self.assertEqual(result.returncode, 2)
         self.assertIn("choose a module from", result.stderr)
+
+    def test_local_observations_lead_to_targeted_todo(self) -> None:
+        with TemporaryDirectory() as folder:
+            root = Path(folder)
+            for directory in ("checks", "koans"):
+                shutil.copytree(ROOT / directory, root / directory,
+                                ignore=shutil.ignore_patterns("__pycache__"))
+            shutil.copyfile(ROOT / "contemplate.py", root / "contemplate.py")
+            learner = root / "koans/python/closures.py"
+            source = learner.read_text()
+            learner.write_text(source.replace("expected: object = __", "expected: object = (7, 7, 7)", 1))
+            contrast = self.run_cli("python", "closures", cwd=root)
+            self.assertIn("closures.py · contrast ... FAIL", contrast.stderr)
+            self.assertIn("Ran 2 tests", contrast.stderr)
+
+            learner.write_text(learner.read_text().replace("expected: object = __", "expected: object = (7, 7)", 1))
+            scaffold = self.run_cli("python", "closures", cwd=root)
+            self.assertEqual(scaffold.returncode, 1)
+            self.assertIn("closures.py · implement ... FAIL", scaffold.stderr)
+            self.assertIn("Implement look up the call key", scaffold.stderr)
+            self.assertIn("Ran 3 tests", scaffold.stderr)

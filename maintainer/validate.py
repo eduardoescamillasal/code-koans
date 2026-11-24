@@ -4,13 +4,13 @@ from importlib import import_module
 from types import SimpleNamespace
 import unittest
 
-from checks import STAGES, TRACKS, load_module, make_case
+from checks import STAGES, TRACKS, load_exercise, load_module, make_case
 from koans import __
 
 
-def outcome(check, exercise, stage):
+def outcome(check, examples, exercise, stage):
     result = unittest.TestResult()
-    make_case(check, exercise, stage).run(result)
+    make_case(check, examples, exercise, stage).run(result)
     if result.errors:
         return "error", result.errors[0][1]
     if result.failures:
@@ -25,7 +25,7 @@ def validate():
         for name in names:
             key = f"{track}_{name}"
             check = load_module(track, name)
-            starter = import_module(f"koans.{track}.{name}")
+            starter = load_exercise(track, name)
             solution = import_module(f"maintainer.references.{key}")
             mutants = import_module(f"maintainer.mutants.{key}").CASES
             for stage in STAGES:
@@ -35,7 +35,7 @@ def validate():
                     ("reference", solution, "pass", ""),
                     ("mutant", altered, "failure", ""),
                 ):
-                    actual, detail = outcome(check, candidate, stage)
+                    actual, detail = outcome(check, starter, candidate, stage)
                     if actual != expected or marker not in detail:
                         failures.append(f"{key}/{stage} ({label}): expected {expected}, got {actual}\n{detail}")
                 verified += 1

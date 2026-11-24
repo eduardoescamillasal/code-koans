@@ -1,11 +1,3 @@
-def predict(t, s):
-    t.assertEqual(s.prediction, isinstance(True, int))
-
-
-def contrast(t, s):
-    t.assertEqual(s.contrast, type(True) is int)
-
-
 def implement(t, s):
     registry = {"scale": ({"n": int}, lambda n: n * 2)}
     t.assertEqual(s.dispatch(registry, {"scale"}, "scale", {"n": 3}), 6)

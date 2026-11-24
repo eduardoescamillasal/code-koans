@@ -33,13 +33,17 @@ Ran 1 test in ...
 FAILED (failures=1)
 ```
 
-Open `koans/python/references.py` and read the matching case in
-`checks/python_references.py`. Before running a new case, commit to a prediction
-and write down why. Fill the blank or implement the requested behavior, then
-rerun. When a contrast changes the result, identify exactly which rule changed.
-Keep edits in `koans/`. The checks live separately so you can read them while
-preserving the exercise contract. Local tests and reference implementations
-are inspectable. Use them to evaluate your reasoning.
+Open `koans/python/references.py`. The example, its assertion, the implementation
+scaffold, and concrete practice tests are all in this file. In `predict`, read
+the example and replace the `__` in `expected: object = __` with your answer.
+Rerun, then do the same in `contrast` and explain why the behavior changes.
+
+When the runner reaches a `todo("...")`, replace that call with the small piece
+of code described in the message. Rerun to uncover the next missing piece.
+Read `practice`, `practice_break`, and `practice_transfer` for sample calls
+and expected behavior. The runner also applies independent checks under
+`checks/`. Keep your edits in `koans/`. Local checks and reference solutions
+are inspectable.
 
 ```sh
 python contemplate.py python

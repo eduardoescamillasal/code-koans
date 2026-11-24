@@ -4,20 +4,6 @@ from unittest import TestCase
 from koans.agents._workflow_graph import Checkpoint, RunResult, State
 
 
-def predict(t: TestCase, s: SimpleNamespace) -> None:
-    original = {"attempts": 1}
-    candidate = original
-    candidate["attempts"] += 1
-    t.assertEqual(s.prediction, (original["attempts"], candidate["attempts"]))
-
-
-def contrast(t: TestCase, s: SimpleNamespace) -> None:
-    original = {"attempts": 1}
-    candidate = original.copy()
-    candidate["attempts"] += 1
-    t.assertEqual(s.contrast, (original["attempts"], candidate["attempts"]))
-
-
 def increment(state: State) -> str | None:
     state["count"] += 1
     return "inc" if state["count"] < 3 else None

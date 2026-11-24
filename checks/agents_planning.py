@@ -1,13 +1,3 @@
-def predict(t, s):
-    graph = {"package": {"compile"}, "compile": set(), "test": {"compile"}}
-    t.assertEqual(s.prediction, tuple(job for job, deps in graph.items() if not deps))
-
-
-def contrast(t, s):
-    graph = {"package": {"compile"}, "compile": {"package"}, "test": {"compile"}}
-    t.assertEqual(s.contrast, tuple(job for job, deps in graph.items() if not deps))
-
-
 def implement(t, s):
     jobs = {"export": ["clean", "review"], "prepare": [], "review": ["prepare"],
             "clean": ["prepare", "prepare"]}

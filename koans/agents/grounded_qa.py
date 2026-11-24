@@ -10,12 +10,30 @@ For transfer, score examples in order. Count total cases, non-abstentions,
 and exact matches. An abstention matches an expected None. Otherwise compare
 answer text exactly and citation IDs as sets, because rendering order can vary."""
 
-from koans import __
+from unittest import TestCase
+
+from koans import Exercise, __, todo
 from koans.agents._grounded_qa import Answer, Document, Example, Generator, Retriever, Score
 
-prediction = __
-contrast = __
 
+def _citation_candidates(limit: int) -> tuple[set[str], set[str]]:
+    ranked = (Document("lead", "A"), Document("archive", "Older guidance"))
+    full_corpus = {excerpt.id for excerpt in ranked}
+    # This sketch filters by individual length. The service needs a total budget.
+    in_context = {excerpt.id for excerpt in ranked if len(excerpt.text) <= limit}
+    return full_corpus, in_context
+
+
+def predict(t: TestCase, *answers: object) -> None:
+    full_corpus, _ = _citation_candidates(limit=2)
+    expected: object = __
+    t.assertEqual(answers[0] if answers else expected, {"archive"} <= full_corpus)
+
+
+def contrast(t: TestCase, *answers: object) -> None:
+    _, in_context = _citation_candidates(limit=2)
+    expected: object = __
+    t.assertEqual(answers[0] if answers else expected, {"archive"} <= in_context)
 
 
 class GroundedQA:
@@ -24,7 +42,53 @@ class GroundedQA:
         self.generator = generator
 
     def answer(self, question: str, budget: int) -> Answer | None:
-        raise AssertionError("Implement answer")
+        if budget < 0:
+            raise ValueError("negative evidence budget")
+        selected: list[Document] = []
+        for excerpt in self.retriever.search(question):
+            todo("select excerpts within the remaining budget")
+        if not selected:
+            return None
+        answer = self.generator.generate(question, tuple(selected))
+        permitted = {excerpt.id for excerpt in selected}
+        todo("return the answer only when its text and cited ids pass validation")
 
     def evaluate(self, examples: tuple[Example, ...], budget: int) -> Score:
-        raise AssertionError("Implement evaluate")
+        if budget < 0:
+            raise ValueError("negative evidence budget")
+        answered = exact = 0
+        for example in examples:
+            actual = self.answer(example.question, budget)
+            todo("count non-abstentions and exact matches, including matching abstentions")
+        return Score(len(examples), answered, exact)
+
+
+class _SampleCorpus:
+    def search(self, question: str) -> tuple[Document, ...]:
+        return (Document("guide", "Local files"),) if question == "where?" else ()
+
+
+class _SampleGenerator:
+    def generate(self, question: str, excerpts: tuple[Document, ...]) -> Answer:
+        return Answer(excerpts[0].text, (excerpts[0].id,))
+
+
+def practice(t: TestCase, exercise: Exercise) -> None:
+    service = exercise.GroundedQA(_SampleCorpus(), _SampleGenerator())
+    t.assertIsNone(service.answer("unknown", 20))
+    t.assertEqual(service.answer("where?", 20), Answer("Local files", ("guide",)))
+
+
+def practice_break(t: TestCase, exercise: Exercise) -> None:
+    class WrongCitation:
+        def generate(self, question: str, excerpts: tuple[Document, ...]) -> Answer:
+            return Answer("result", ("not-in-context",))
+
+    service = exercise.GroundedQA(_SampleCorpus(), WrongCitation())
+    t.assertIsNone(service.answer("where?", 20))
+
+
+def practice_transfer(t: TestCase, exercise: Exercise) -> None:
+    service = exercise.GroundedQA(_SampleCorpus(), _SampleGenerator())
+    examples = (Example("unknown", None),)
+    t.assertEqual(service.evaluate(examples, 20), Score(1, 0, 1))

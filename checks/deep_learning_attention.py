@@ -1,16 +1,6 @@
 import math
 
 
-def predict(t, s):
-    # Replacing a masked score with zero still gives it positive mass.
-    t.assertEqual(s.prediction, tuple(math.exp(x) / 2 for x in (0, 0)))
-
-
-def contrast(t, s):
-    weights = [math.exp(x) for x in (0, -math.inf)]
-    t.assertEqual(s.contrast, tuple(x / sum(weights) for x in weights))
-
-
 def implement(t, s):
     output, weights = s.attend([1, 1, 1, 1], [[2, 0, 0, 0], [0, 0, 0, 0]], [[4, 2], [1, -1]], [True, True])
     p = math.e / (math.e + 1)

@@ -1,13 +1,3 @@
-def predict(t, s):
-    # Central difference for x*x at x=3.
-    t.assertEqual(s.prediction, (4**2 - 2**2) / (4 - 2))
-
-
-def contrast(t, s):
-    # Here the second operand stays fixed.
-    t.assertEqual(s.contrast, (4*3 - 2*3) / (4 - 2))
-
-
 def implement(t, s):
     x, y = s.Value(2), s.Value(3)
     z = x * y + y

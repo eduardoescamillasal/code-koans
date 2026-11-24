@@ -1,13 +1,3 @@
-def predict(t, s):
-    weight, gradient, rate = 0.0, -6.0, 0.0
-    t.assertEqual(s.prediction, weight - rate * gradient)
-
-
-def contrast(t, s):
-    weight, gradient, rate = 0.0, -6.0, 0.25
-    t.assertEqual(s.contrast, weight - rate * gradient)
-
-
 def implement(t, s):
     t.assertEqual(s.diagnose([(8, -4), (8, -4)]), "check learning rate")
     t.assertEqual(s.diagnose([(8, -4), (2, -2)]), "loss decreasing")

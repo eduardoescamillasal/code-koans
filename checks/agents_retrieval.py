@@ -1,19 +1,6 @@
 import math
 
 
-def predict(t, s):
-    q, a, b = (1, 0), (7, 7), (1, 0)
-    def dot(x, y):
-        return sum(i*j for i, j in zip(x, y))
-    t.assertEqual(s.prediction, dot(q, a) > dot(q, b))
-
-
-def contrast(t, s):
-    a = 7 / math.hypot(7, 7)
-    b = 1 / math.hypot(1, 0)
-    t.assertEqual(s.contrast, a > b)
-
-
 def implement(t, s):
     docs = [("off", (7, 7), "off-topic"), ("on", (1, 0), "evidence")]
     t.assertEqual(s.retrieve((1, 0), docs, 1), [docs[1]])

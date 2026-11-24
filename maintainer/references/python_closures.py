@@ -1,7 +1,7 @@
 from functools import wraps
 
-prediction = (2, 2, 2)
-contrast = (0, 1, 2)
+prediction = (7, 7, 7)
+contrast = (7, 7)
 
 
 def memoize(function):

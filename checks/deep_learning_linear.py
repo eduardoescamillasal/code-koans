@@ -1,17 +1,3 @@
-def predict(t, s):
-    # Double x, then add x to y.
-    x, y = 2, 3
-    x = 2 * x
-    t.assertEqual(s.prediction, (x, x + y))
-
-
-def contrast(t, s):
-    # Add x to y, then double x.
-    x, y = 2, 3
-    y = x + y
-    t.assertEqual(s.contrast, (2 * x, y))
-
-
 def implement(t, s):
     t.assertEqual(s.matmul([[1, 2, -1], [0, 3, 4]], [[2, 0], [1, 2], [0, 5]]),
                   [[4, -1], [3, 26]])

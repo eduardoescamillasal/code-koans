@@ -1,7 +1,7 @@
 import math
 
-prediction = 0.0
-contrast = 1.0
+prediction = "overflow"
+contrast = (0.5, 0.5)
 
 
 def cross_entropy(logits, target):

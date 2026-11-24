@@ -1,7 +1,8 @@
 # API, agent, and workflow practice
 
 The new modules use typed service classes, immutable payload objects, and
-injected interfaces. Run any module directly. The deterministic fixtures model
+injected interfaces. Run any module directly, then edit a prediction blank or
+a small TODO in the learner file named by the runner. The deterministic fixtures model
 application contracts and leave network transport, framework runtime, and
 persistent storage outside the exercises.
 
