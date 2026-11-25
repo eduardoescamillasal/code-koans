@@ -19,9 +19,3 @@ def snapshot(root):
         return result
 
     return clone(root)
-
-
-def record(state, branch, value):
-    updated = snapshot(state)
-    updated[branch]["points"].append(value)
-    return updated

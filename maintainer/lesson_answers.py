@@ -21,6 +21,10 @@ ANSWERS: dict[str, dict[str, tuple[GuessSet, GuessSet]]] = {
             (False, True, False),
             (True, False, True),
         ),
+        "test_a_fork_keeps_shared_settings_inside_the_new_graph": (
+            (8, 3, False),
+            (3, 3, False),
+        ),
     },
     "python_closures": {
         "test_defaults_capture_values_while_closures_read_cells": (

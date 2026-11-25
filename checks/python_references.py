@@ -16,10 +16,16 @@ def break_cases(t, s):
 
 
 def transfer(t, s):
-    shared = {"points": [1]}
-    original = {"left": shared, "right": shared, "independent": {"points": [1]}}
-    updated = s.record(original, "left", 2)
-    t.assertEqual(updated["right"]["points"], [1, 2])
-    t.assertEqual(updated["independent"]["points"], [1])
-    t.assertEqual(original["left"]["points"], [1])
-    t.assertEqual(s.record(updated, "right", 3)["left"]["points"], [1, 2, 3])
+    defaults = {"volume": 3}
+    original = {"speaker": defaults, "headphones": defaults, "alarm": {"volume": 3}}
+    preview = s.snapshot(original)
+    preview["speaker"]["volume"] = 8
+
+    t.assertEqual(preview["headphones"]["volume"], 8)
+    t.assertEqual(preview["alarm"]["volume"], 3)
+    t.assertEqual(original["speaker"]["volume"], 3)
+
+    second_preview = s.snapshot(preview)
+    second_preview["headphones"]["volume"] = 1
+    t.assertEqual(second_preview["speaker"]["volume"], 1)
+    t.assertEqual(preview["speaker"]["volume"], 8)

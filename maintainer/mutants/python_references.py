@@ -3,5 +3,5 @@ CASES = {
     "contrast": {"contrast": (False, 1, 1)},
     "implement": {"snapshot": lambda x: x[:]},
     "break_cases": {"snapshot": lambda x: x.copy()},
-    "transfer": {"record": lambda state, branch, value: state},
+    "transfer": {"snapshot": lambda state: {name: settings.copy() for name, settings in state.items()}},
 }

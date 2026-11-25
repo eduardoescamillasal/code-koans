@@ -5,9 +5,7 @@ Levels 3–5: snapshot a tree of exact dict/list containers and immutable leaves
 Preserve shared containers and self-cycles within the new graph. Keep dict keys
 as-is. Use explicit traversal and a memo rather than copy.deepcopy.
 
-For transfer, a timeline forks a snapshot of state, then appends one reading
-to a named branch's points list. Return the updated state. Changes must remain
-visible to other branches sharing that list in the fork.
+The final example follows two names for the same settings inside a fork.
 """
 
 from copy import deepcopy
@@ -65,9 +63,17 @@ class AboutReferences(Koan):
         self.assertEqual(__, detached[0] is detached)
         self.assertEqual(__, detached[0] is node)
 
+    def test_a_fork_keeps_shared_settings_inside_the_new_graph(self) -> None:
+        defaults = {"volume": 3}
+        original = {"speaker": defaults, "headphones": defaults}
+        preview = deepcopy(original)
+        preview["speaker"]["volume"] = 8
+        self.assertEqual(__, preview["headphones"]["volume"])
+        self.assertEqual(__, original["speaker"]["volume"])
+        self.assertEqual(__, preview["speaker"] is original["speaker"])
+
 
 T = TypeVar("T")
-Timeline = dict[str, dict[str, list[int]]]
 
 
 def snapshot(root: T) -> T:
@@ -86,8 +92,3 @@ def snapshot(root: T) -> T:
         return destination
 
     return cast(T, clone(root))
-
-
-def record(state: Timeline, branch: str, value: int) -> Timeline:
-    # A branch contains a points list. Fork the state before adding the point.
-    todo("fork the state, append the point, and return the fork")
