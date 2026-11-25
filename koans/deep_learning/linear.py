@@ -26,18 +26,32 @@ class AboutLinearMaps(Koan):
         y = x + y
         self.assertEqual(__, (2 * x, y))
 
-    def test_rows_multiply_columns(self) -> None:
-        self.assertEqual(matmul([[2, 3]], [[5], [-1]]), [[7]])
-        self.assertEqual(matmul([[1, 0], [0, 1]], [[9], [8]]), [[9], [8]])
+    def test_basis_vectors_pick_out_columns(self) -> None:
+        rows = [[2, 5], [3, 7]]
+        left_basis = [1, 0]
+        right_basis = [0, 1]
+        self.assertEqual(__, [sum(a * b for a, b in zip(row, left_basis)) for row in rows])
+        self.assertEqual(__, [sum(a * b for a, b in zip(row, right_basis)) for row in rows])
 
-    def test_incompatible_dimensions_are_rejected(self) -> None:
-        # zip alone would silently drop a coordinate.
-        with self.assertRaises(ValueError):
-            matmul([[3, 4]], [[2]])
+    def test_rows_dot_columns_not_other_rows(self) -> None:
+        a = [[1, 2], [3, 4]]
+        b = [[2, 10], [3, 20]]
+        columns = list(zip(*b))
+        self.assertEqual(__, columns[0])
+        self.assertEqual(__, sum(x * y for x, y in zip(a[0], columns[0])))
+        self.assertEqual(__, sum(x * y for x, y in zip(a[1], columns[1])))
 
-    def test_maps_consume_the_previous_output(self) -> None:
-        points = [[2], [3]]
-        self.assertEqual(transform(points, [[[1, 1]], [[4]]]), [[20]])
+    def test_zip_truncates_unless_we_require_equal_lengths(self) -> None:
+        row = [2, 4]
+        column = [3]
+        self.assertEqual(__, list(zip(row, column)))
+        try:
+            list(zip(row, column, strict=True))
+        except ValueError as error:
+            result = type(error).__name__
+        else:
+            result = "accepted"
+        self.assertEqual(__, result)
 
 
 Matrix = list[list[float]]

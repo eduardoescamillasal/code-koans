@@ -24,23 +24,29 @@ class AboutGroundedAnswers(Koan):
         _, in_context = _citation_candidates(limit=2)
         self.assertEqual(__, {"archive"} <= in_context)
 
-    def test_answers_depend_on_selected_evidence(self) -> None:
-        service = GroundedQA(_SampleCorpus(), _SampleGenerator())
-        self.assertIsNone(service.answer("unknown", 20))
-        self.assertEqual(service.answer("where?", 20), Answer("Local files", ("guide",)))
+    def test_a_total_budget_differs_from_a_per_document_limit(self) -> None:
+        docs = (Document("a", "123"), Document("b", "456"), Document("c", "7"))
+        budget = 4
+        individually_short = [doc.id for doc in docs if len(doc.text) <= budget]
+        fitted = []
+        for doc in docs:
+            if len(doc.text) <= budget:
+                fitted.append(doc.id)
+                budget -= len(doc.text)
+        self.assertEqual(__, individually_short)
+        self.assertEqual(__, fitted)
 
-    def test_citations_must_come_from_the_supplied_context(self) -> None:
-        class WrongCitation:
-            def generate(self, question: str, excerpts: tuple[Document, ...]) -> Answer:
-                return Answer("result", ("not-in-context",))
+    def test_a_set_check_alone_cannot_detect_duplicate_citations(self) -> None:
+        citations = ("a", "a")
+        allowed = {"a", "b"}
+        self.assertEqual(__, set(citations) <= allowed)
+        self.assertEqual(__, len(set(citations)) == len(citations))
 
-        service = GroundedQA(_SampleCorpus(), WrongCitation())
-        self.assertIsNone(service.answer("where?", 20))
-
-    def test_expected_abstentions_count_as_matches(self) -> None:
-        service = GroundedQA(_SampleCorpus(), _SampleGenerator())
-        examples = (Example("unknown", None),)
-        self.assertEqual(service.evaluate(examples, 20), Score(1, 0, 1))
+    def test_citations_can_match_when_rendering_order_differs(self) -> None:
+        left = Answer("ready", ("a", "b"))
+        right = Answer("ready", ("b", "a"))
+        self.assertEqual(__, left == right)
+        self.assertEqual(__, set(left.citations) == set(right.citations))
 
 
 def _citation_candidates(limit: int) -> tuple[set[str], set[str]]:
@@ -76,13 +82,3 @@ class GroundedQA:
             actual = self.answer(example.question, budget)
             todo("count non-abstentions and exact matches, including matching abstentions")
         return Score(len(examples), answered, exact)
-
-
-class _SampleCorpus:
-    def search(self, question: str) -> tuple[Document, ...]:
-        return (Document("guide", "Local files"),) if question == "where?" else ()
-
-
-class _SampleGenerator:
-    def generate(self, question: str, excerpts: tuple[Document, ...]) -> Answer:
-        return Answer(excerpts[0].text, (excerpts[0].id,))

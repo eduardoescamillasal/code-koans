@@ -25,18 +25,25 @@ class AboutDependencyPlanning(Koan):
         graph = {"package": {"compile"}, "compile": {"package"}, "test": {"compile"}}
         self.assertEqual(__, tuple(job for job, deps in graph.items() if not deps))
 
-    def test_prerequisites_run_first(self) -> None:
-        graph = {"send": ["review"], "review": ["draft"], "draft": []}
-        self.assertEqual(plan(graph), ["draft", "review", "send"])
+    def test_repeated_edges_should_only_count_one_prerequisite(self) -> None:
+        prerequisites = ["read", "read", "validate"]
+        self.assertEqual(__, len(prerequisites))
+        self.assertEqual(__, len(set(prerequisites)))
 
-    def test_ready_work_can_hide_a_separate_cycle(self) -> None:
-        # Having an initially ready job does not prove that the remaining jobs are acyclic.
-        with self.assertRaises(ValueError):
-            plan({"ready": [], "closed": ["closed"]})
+    def test_newly_ready_work_can_move_ahead_of_waiting_work(self) -> None:
+        ready = ["b", "z"]
+        heapify(ready)
+        self.assertEqual(__, heappop(ready))
+        heappush(ready, "a")
+        self.assertEqual(__, heappop(ready))
+        self.assertEqual(__, heappop(ready))
 
-    def test_changes_propagate_to_dependents(self) -> None:
-        graph = {"clean": [], "package": ["clean"], "publish": ["package"], "note": []}
-        self.assertEqual(rebuild(graph, "package"), ["package", "publish"])
+    def test_one_completed_dependency_might_not_release_a_job(self) -> None:
+        remaining = {"publish": 2}
+        remaining["publish"] -= 1
+        self.assertEqual(__, remaining["publish"] == 0)
+        remaining["publish"] -= 1
+        self.assertEqual(__, remaining["publish"] == 0)
 
 
 Dependencies = Mapping[str, Iterable[str]]

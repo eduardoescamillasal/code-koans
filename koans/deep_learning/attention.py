@@ -24,18 +24,28 @@ class AboutAttentionMasks(Koan):
         weights = [math.exp(x) for x in (0, -math.inf)]
         self.assertEqual(__, tuple(x / sum(weights) for x in weights))
 
-    def test_masked_values_do_not_affect_the_output(self) -> None:
-        output, weights = attend([1], [[1000], [1]], [[17], [3]], [False, True])
-        self.assertEqual(weights, [0, 1])
-        self.assertEqual(output, [3])
+    def test_a_mask_is_applied_before_choosing_the_normalizer(self) -> None:
+        scores = [1000.0, 3.0, 3.0]
+        keep = [False, True, True]
+        visible = [value for value, allowed in zip(scores, keep) if allowed]
+        peak = max(visible)
+        self.assertEqual(__, peak)
+        self.assertEqual(__, sum(math.exp(value - peak) for value in visible))
 
-    def test_all_masked_is_undefined(self) -> None:
-        # With no visible values there is no probability distribution.
-        with self.assertRaises(ValueError):
-            attend([1], [[1]], [[9]], [False])
+    def test_a_weighted_value_combines_coordinates_independently(self) -> None:
+        weights = [0.0, 0.25, 0.75]
+        vectors = [[100, 100], [2, 4], [6, 0]]
+        columns = list(zip(*vectors))
+        mixed = [sum(weight * value for weight, value in zip(weights, col)) for col in columns]
+        self.assertEqual(__, mixed[0])
+        self.assertEqual(__, mixed[1])
 
-    def test_a_prefix_ignores_later_values(self) -> None:
-        self.assertEqual(causal_smooth([[0], [0]], [[2], [8]]), [[2], [5]])
+    def test_each_causal_row_exposes_a_different_prefix(self) -> None:
+        positions = range(4)
+        keep = [[source <= query for source in positions] for query in positions]
+        self.assertEqual(__, keep[0])
+        self.assertEqual(__, keep[2])
+        self.assertEqual(__, sum(keep[3]))
 
 
 def _visible_weights(scores: list[float], keep: list[bool]) -> list[float]:

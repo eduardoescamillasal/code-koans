@@ -2,24 +2,22 @@
 
 1. Identify the mechanism and a concrete misconception. Write down what the
    learner should be able to explain or build afterward.
-2. Add one `About…(Koan)` class to `koans/<track>/<module>.py`. Name methods
-   after the behavior they demonstrate. The first two methods each use one
-   inline `self.assertEqual(__, ...)` and change a detail that matters for the
-   implementation. The runner follows declaration order.
-3. Follow with one or more small construction methods, then one boundary
-   method and one transfer method. Call the typed functions or classes
-   directly from those tests. Scaffold each exercise with local
-   `todo("...")` calls and enough surrounding code to make the next edit clear.
-   Put independent `implement`, `break_cases`, and `transfer` cases under
+2. Add one `About…(Koan)` class in `koans/<track>/<module>.py`. Each
+   `test_…` method should run against a short, already working example and
+   contain one or more inline `self.assertEqual(__, expression)` blanks.
+   Keep related assertions together. The first two methods make a contrast
+   that exposes a decision the learner will face in the implementation.
+3. Put the typed implementation scaffold below the examples, with local
+   `todo("...")` calls and enough surrounding code to make the next edit
+   concrete. Put fixed `implement`, `break_cases`, and `transfer` checks under
    `checks/<track>_<module>.py`. Each takes a `TestCase` and a candidate
-   namespace. The runner executes the visible lesson methods first.
-4. Put the solved API and the two observation answers (`prediction` and
-   `contrast`) under `maintainer/references/`. Put one targeted
-   replacement per stage in `maintainer/mutants/` under the same module name.
-   The `CASES` mapping contains stage names and field overrides for the
-   reference namespace. Use wrong results a learner might reasonably produce,
-   such as silently truncating mismatched dimensions. An import error or other
-   unexpected exception will not satisfy the validator.
+   namespace. The runner finishes the inline exercises before these checks.
+4. Put the project solution and first two answers (`prediction` and
+   `contrast`) under `maintainer/references/`. Put plausible wrong answers and
+   project substitutions under `maintainer/mutants/`. For remaining inline
+   methods, add the correct and mistaken guess tuples to
+   `maintainer/lesson_answers.py`, in assertion order. The validator runs
+   against untouched starters.
 5. Add the module to the correct position in `checks.TRACKS`. Run the selected
    module, then run `python -m maintainer.validate` and
    `python -m unittest maintainer.test_runner`. Review every failure path.

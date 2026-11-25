@@ -26,22 +26,30 @@ class AboutRestResources(Koan):
         updated = replace(original, state="complete")
         self.assertEqual(__, (original.state, updated.state))
 
-    def test_creating_a_job_supplies_a_location(self) -> None:
-        api = JobService()
-        create = api.submit("sample", "refresh index")
-        self.assertEqual(create, Response(201, Job("1", "refresh index"), "/jobs/1"))
-        self.assertEqual(api.get("1"), Response(200, Job("1", "refresh index")))
+    def test_creation_and_lookup_have_different_response_metadata(self) -> None:
+        job = Job("3", "refresh")
+        created = Response(201, job, "/jobs/3")
+        found = Response(200, job)
+        self.assertEqual(__, created.status == found.status)
+        self.assertEqual(__, found.location)
+        self.assertEqual(__, created.job == found.job)
 
-    def test_a_replayed_key_cannot_change_its_input(self) -> None:
-        api = JobService()
-        self.assertEqual(api.submit("same", ""), Response(422))
-        self.assertEqual(api.submit("same", "refresh").job, Job("1", "refresh"))
-        self.assertEqual(api.submit("same", "different"), Response(409))
+    def test_replacing_the_registry_entry_keeps_a_stored_creation_response(self) -> None:
+        queued = Job("1", "refresh")
+        response = Response(201, queued, "/jobs/1")
+        resource = {"1": queued}
+        resource["1"] = replace(queued, state="complete")
+        self.assertEqual(__, queued.state)
+        self.assertEqual(__, resource["1"].state)
+        self.assertEqual(__, response.job is resource["1"])
 
-    def test_completion_keeps_the_original_creation_snapshot(self) -> None:
-        api = JobService()
-        api.submit("first", "rebuild")
-        self.assertEqual(api.complete("1"), Response(200, Job("1", "rebuild", "complete")))
+    def test_a_request_key_can_refer_to_one_original_input(self) -> None:
+        indexed = {"job-key": "refresh"}
+        replay = indexed.setdefault("job-key", "refresh")
+        collision = indexed.setdefault("job-key", "reindex")
+        self.assertEqual(__, replay)
+        self.assertEqual(__, collision)
+        self.assertEqual(__, len(indexed))
 
 
 class JobService:

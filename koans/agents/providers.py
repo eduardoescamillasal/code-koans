@@ -23,22 +23,28 @@ class AboutProviderAdapters(Koan):
         history = [{"role": "system"}, {"role": "user"}]
         self.assertEqual(__, tuple(msg["role"] for msg in history))
 
-    def test_the_adapter_combines_usage_counters(self) -> None:
-        client = ProviderClient(_ClaudeSample())
-        self.assertEqual(client.call("claude", "policy", (Message("user", "hello"),)),
-                      Reply("claude", "example", 5))
+    def test_input_and_output_counters_measure_different_parts_of_usage(self) -> None:
+        claude = {"input_tokens": 8, "output_tokens": 3}
+        azure = {"prompt_tokens": 2, "completion_tokens": 9}
+        self.assertEqual(__, claude["input_tokens"] == azure["prompt_tokens"])
+        self.assertEqual(__, sum(claude.values()) == sum(azure.values()))
 
-    def test_token_counts_do_not_accept_booleans(self) -> None:
-        class Malformed:
-            def send(self, provider: Provider, payload: Payload) -> dict[str, object]:
-                return {"content": "text", "input_tokens": True, "output_tokens": 2}
+    def test_a_boolean_can_look_like_a_token_count(self) -> None:
+        raw = {"input_tokens": True, "output_tokens": 6}
+        self.assertEqual(__, sum(raw.values()))
+        self.assertEqual(__, type(raw["input_tokens"]) is int)
 
-        with self.assertRaises(ValueError):
-            ProviderClient(Malformed()).call("claude", "policy", ())
-
-    def test_throttling_can_select_the_backup(self) -> None:
-        client = ProviderClient(_FallbackSample())
-        self.assertEqual(client.answer("policy", ()), Reply("azure", "backup", 3))
+    def test_the_exception_retains_status_for_the_routing_decision(self) -> None:
+        statuses = (401, 429, 503)
+        retries = []
+        for status in statuses:
+            try:
+                raise ProviderError(status)
+            except ProviderError as error:
+                if error.status in {429, 503}:
+                    retries.append(error.status)
+        self.assertEqual(__, retries)
+        self.assertEqual(__, len(statuses) - len(retries))
 
 
 class ProviderClient:
@@ -63,15 +69,3 @@ class ProviderClient:
             return self.call("claude", policy, messages)
         except ProviderError as error:
             todo("propagate terminal errors and make one fallback for retryable statuses")
-
-
-class _ClaudeSample:
-    def send(self, provider: Provider, payload: Payload) -> dict[str, object]:
-        return {"content": "example", "input_tokens": 2, "output_tokens": 3}
-
-
-class _FallbackSample:
-    def send(self, provider: Provider, payload: Payload) -> dict[str, object]:
-        if provider == "claude":
-            raise ProviderError(429)
-        return {"text": "backup", "prompt_tokens": 1, "completion_tokens": 2}

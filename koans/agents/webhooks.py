@@ -35,24 +35,26 @@ class AboutWebhookDelivery(Koan):
                           for body in (left, right))
         self.assertEqual(__, _sample_digest(reencoded[0]) == _sample_digest(reencoded[1]))
 
-    def test_a_valid_envelope_can_be_processed(self) -> None:
-        inbox = DeliveryInbox(b"demo", lambda event: event.amount * 2)
-        body = b'{"id":"sample","amount":2}'
-        signature = hmac.digest(b"demo", b"100." + body, "sha256").hex()
-        self.assertEqual(inbox.receive(Delivery(100, body, signature), 100), Receipt(200, 4))
-        self.assertEqual(inbox.receive(Delivery(100, body, "invalid"), 100), Receipt(401))
+    def test_a_timestamp_is_part_of_the_signed_bytes(self) -> None:
+        body = b'{"id":"item","amount":2}'
+        issued = _sample_digest(b"100." + body)
+        forwarded = _sample_digest(b"101." + body)
+        self.assertEqual(__, issued == forwarded)
+        self.assertEqual(__, hmac.compare_digest(issued, _sample_digest(b"100." + body)))
 
-    def test_rewriting_the_body_invalidates_the_signature(self) -> None:
-        inbox = DeliveryInbox(b"demo", lambda event: event.amount)
-        original = b'{"id":"sample","amount":2}'
-        signature = hmac.digest(b"demo", b"100." + original, "sha256").hex()
-        rewritten = b'{"id":"sample","amount": 2}'
-        self.assertEqual(inbox.receive(Delivery(100, rewritten, signature), 100), Receipt(401))
+    def test_the_time_window_applies_to_past_and_future_deliveries(self) -> None:
+        now = 100
+        timestamps = (39, 40, 160, 161)
+        accepted = [abs(now - sent) <= 60 for sent in timestamps]
+        self.assertEqual(__, accepted)
+        self.assertEqual(__, sum(accepted))
 
-    def test_batch_delivery_returns_a_receipt_per_event(self) -> None:
-        inbox = DeliveryInbox(b"demo", lambda event: event.amount)
-        bad = Delivery(100, b"{}", "invalid")
-        self.assertEqual(inbox.redrive((bad,), 100), (Receipt(401),))
+    def test_an_existing_receipt_keeps_the_original_delivery_result(self) -> None:
+        completed = {"a": (2, Receipt(200, 9))}
+        incoming = Event("a", 9)
+        amount, receipt = completed[incoming.id]
+        self.assertEqual(__, amount == incoming.amount)
+        self.assertEqual(__, receipt.value)
 
 
 def _sample_digest(body: bytes) -> bytes:

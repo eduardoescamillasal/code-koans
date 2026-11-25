@@ -29,19 +29,22 @@ class AboutCosineRetrieval(Koan):
         b = 1 / math.hypot(1, 0)
         self.assertEqual(__, a > b)
 
-    def test_retrieval_ranks_by_alignment(self) -> None:
-        documents = [("down", (0, -3), "d"), ("up", (0, 2), "u")]
-        self.assertEqual(retrieve((0, 1), documents, 1), [documents[1]])
+    def test_positive_rescaling_does_not_change_direction(self) -> None:
+        self.assertEqual(__, _unit((3, 4)))
+        self.assertEqual(__, _unit((6, 8)))
+        self.assertEqual(__, _unit((-3, -4)))
 
-    def test_ties_use_ids_and_zero_vectors_are_invalid(self) -> None:
-        docs = [("b", (1, 0), "late"), ("a", (9, 0), "first")]
-        self.assertEqual(retrieve((1, 0), docs, 1), [docs[1]])
-        with self.assertRaises(ValueError):
-            retrieve((1, 0), [("x", (0, 0), "empty")], 1)
+    def test_ranking_ties_can_be_broken_without_using_document_text(self) -> None:
+        scores = [(0.7, "c", "first"), (0.7, "a", "last"), (-0.2, "b", "negative")]
+        ordered = sorted(scores, key=lambda item: (-item[0], item[1]))
+        self.assertEqual(__, [doc_id for _, doc_id, _ in ordered])
+        self.assertEqual(__, ordered[0][2])
 
-    def test_separators_use_the_evidence_budget(self) -> None:
-        documents = [("a", (1, 0), "x"), ("b", (0, 1), "y")]
-        self.assertEqual(evidence((1, 0), documents, 2, 3), (["a", "b"], "x\ny"))
+    def test_joining_evidence_uses_space_for_separators(self) -> None:
+        excerpts = ["one", "two"]
+        joined = "\n".join(excerpts)
+        self.assertEqual(__, sum(map(len, excerpts)))
+        self.assertEqual(__, len(joined))
 
 
 Vector = Sequence[float]

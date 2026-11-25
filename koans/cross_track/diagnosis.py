@@ -23,19 +23,26 @@ class AboutTrainingDiagnosis(Koan):
         weight, gradient, rate = 0.0, -6.0, 0.25
         self.assertEqual(__, weight - rate * gradient)
 
-    def test_loss_and_gradient_identify_two_training_outcomes(self) -> None:
-        self.assertEqual(diagnose([(10, -1), (5, -1)]), "loss decreasing")
-        self.assertEqual(diagnose([(10, 0), (10, 0)]), "inspect gradient")
+    def test_a_shared_weight_receives_a_contribution_from_each_target(self) -> None:
+        weight = 0.0
+        targets = (2.0, 4.0)
+        residuals = [weight - y for y in targets]
+        self.assertEqual(__, sum(error * error for error in residuals))
+        self.assertEqual(__, sum(2 * error for error in residuals))
 
-    def test_invalid_samples_cannot_be_diagnosed(self) -> None:
-        with self.assertRaises(ValueError):
-            diagnose([(2, 3), (float("nan"), 1)])
-        self.assertEqual(diagnose([(2, -1), (3, 2)]), "reduce learning rate")
+    def test_a_large_step_can_increase_loss_despite_a_nonzero_gradient(self) -> None:
+        def loss(weight: float) -> float:
+            return (weight - 3.0) ** 2
 
-    def test_the_agent_reads_the_trace_with_read_only_tools(self) -> None:
-        status, text, events = training_report(0)
-        self.assertEqual((status, text), ("final", "check learning rate"))
-        self.assertEqual([event["ok"] for event in events], [False, True])
+        start, slope = 0.0, -6.0
+        self.assertEqual(__, loss(start - 0.25 * slope))
+        self.assertEqual(__, loss(start - 1.25 * slope) > loss(start))
+
+    def test_a_flat_loss_can_hide_either_a_zero_rate_or_a_zero_gradient(self) -> None:
+        unchanged_with_gradient = [(20.0, -12.0), (20.0, -12.0)]
+        stationary = [(20.0, 0.0), (20.0, 0.0)]
+        self.assertEqual(__, unchanged_with_gradient[-1][0] == stationary[-1][0])
+        self.assertEqual(__, unchanged_with_gradient[-1][1] == stationary[-1][1])
 
 
 Trace = Sequence[tuple[float, float]]

@@ -1,4 +1,6 @@
 def implement(t, s):
+    label = "sensor A"
+    t.assertIs(s.snapshot(label), label)
     source = [{"count": 2}]
     copy = s.snapshot(source)
     t.assertEqual(copy, source)

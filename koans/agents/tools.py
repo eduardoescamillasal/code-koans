@@ -24,29 +24,31 @@ class AboutToolPermissions(Koan):
     def test_exact_types_reject_booleans_as_integers(self) -> None:
         self.assertEqual(__, type(True) is int)
 
-    def test_a_registered_tool_still_needs_permission(self) -> None:
-        def preview(qty: int) -> int:
-            return qty + 2
+    def test_registration_and_permission_are_independent(self) -> None:
+        registered = {"read", "write"}
+        allowed = {"read", "export"}
+        self.assertEqual(__, "write" in registered and "write" in allowed)
+        self.assertEqual(__, "export" in registered and "export" in allowed)
+        self.assertEqual(__, "read" in registered and "read" in allowed)
 
-        registry = {"preview": ({"qty": int}, preview)}
-        self.assertEqual(dispatch(registry, {"preview"}, "preview", {"qty": 5}), 7)
-        with self.assertRaises(PermissionError):
-            dispatch(registry, set(), "preview", {"qty": 5})
+    def test_an_extra_argument_is_a_schema_mismatch(self) -> None:
+        required = {"quantity": int}
+        valid = {"quantity": 2}
+        extra = {"quantity": 2, "destination": "other"}
+        self.assertEqual(__, valid.keys() == required.keys())
+        self.assertEqual(__, extra.keys() == required.keys())
 
-    def test_invalid_arguments_do_not_invoke_a_tool(self) -> None:
-        invoked: list[int] = []
+    def test_building_keyword_arguments_does_not_invoke_a_tool(self) -> None:
+        seen: list[int] = []
 
-        def write(count: int) -> None:
-            invoked.append(count)
+        def lookup(key: int) -> int:
+            seen.append(key)
+            return key * 10
 
-        with self.assertRaises(ValueError):
-            dispatch({"write": ({"count": int}, write)}, {"write"}, "write", {"count": True})
-        self.assertEqual(invoked, [])
-
-    def test_preview_results_distinguish_rejection(self) -> None:
-        registry: Registry = {"preview": ({"qty": int}, lambda qty: abs(qty))}
-        batch = [("preview", {"qty": -4}), ("missing", {})]
-        self.assertEqual(preview_batch(registry, batch), [("ok", 4), ("rejected", None)])
+        args = {"key": 3}
+        self.assertEqual(__, seen.copy())
+        self.assertEqual(__, lookup(**args))
+        self.assertEqual(__, seen)
 
 
 Registry = Mapping[str, tuple[Mapping[str, type], Callable[..., object]]]

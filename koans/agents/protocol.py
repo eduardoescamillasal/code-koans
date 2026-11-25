@@ -25,19 +25,21 @@ class AboutMessageValidation(Koan):
         grouped = json.loads('{"limit":1,"limit":9}', object_pairs_hook=list)
         self.assertEqual(__, grouped)
 
-    def test_final_text_must_be_a_string(self) -> None:
-        self.assertEqual(parse('{"type":"final","text":"ok"}'), {"type": "final", "text": "ok"})
-        with self.assertRaises(ValueError):
-            parse('{"type":"final","text":7}')
+    def test_valid_json_can_still_have_the_wrong_shape(self) -> None:
+        data = json.loads('["final", "complete"]')
+        self.assertEqual(__, type(data).__name__)
+        event = json.loads('{"type":"final","text":"complete","extra":true}')
+        self.assertEqual(__, event.keys() == {"type", "text"})
 
-    def test_duplicate_tool_arguments_are_rejected(self) -> None:
-        with self.assertRaises(ValueError):
-            parse('{"type":"call","id":"a","name":"read","args":{"limit":1,"limit":2}}')
+    def test_strictly_finite_arguments_need_validation_after_parsing(self) -> None:
+        value = json.loads('{"n":1e999}')["n"]
+        self.assertEqual(__, isinstance(value, float))
+        self.assertEqual(__, math.isfinite(value))
 
-    def test_only_final_text_goes_into_the_archive(self) -> None:
-        replies = ['{"type":"call","id":"a","name":"read","args":{}}',
-                   '{"type":"final","text":"ready"}']
-        self.assertEqual(archive_text(replies), ["ready"])
+    def test_final_text_is_a_string_even_if_it_looks_like_a_message(self) -> None:
+        reply = json.loads(r'{"type":"final","text":"{\"type\":\"call\"}"}')
+        self.assertEqual(__, type(reply["text"]).__name__)
+        self.assertEqual(__, reply["type"])
 
 
 Scalar = bool | int | float | str | None

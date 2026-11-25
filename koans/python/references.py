@@ -10,6 +10,7 @@ to a named branch's points list. Return the updated state. Changes must remain
 visible to other branches sharing that list in the fork.
 """
 
+from copy import deepcopy
 from typing import TypeVar, cast
 
 from koans import Koan, __, todo
@@ -30,30 +31,39 @@ class AboutReferences(Koan):
         shallow.append({})
         self.assertEqual(__, (shallow is original, len(original), original[0]["count"]))
 
-    def test_an_immutable_leaf_needs_no_copy(self) -> None:
-        label = "sensor A"
-        self.assertIs(snapshot(label), label)
+    def test_rebinding_a_name_leaves_the_other_name_alone(self) -> None:
+        current = ["queued"]
+        previous = current
+        current = ["done"]
+        self.assertEqual(__, previous)
+        self.assertEqual(__, current is previous)
 
-    def test_snapshots_keep_internal_aliases(self) -> None:
-        child = [1]
-        state = [child, child]
-        copied = snapshot(state)
-        self.assertEqual(copied, [[1], [1]])
-        self.assertIs(copied[0], copied[1])
-        self.assertIsNot(copied[0], child)
+    def test_a_shallow_copy_preserves_repeated_child_references(self) -> None:
+        shared = {"count": 1}
+        rows = [shared, shared]
+        clone = rows.copy()
+        clone[1]["count"] += 2
+        self.assertEqual(__, clone is rows)
+        self.assertEqual(__, clone[0] is clone[1])
+        self.assertEqual(__, rows[0]["count"])
 
-    def test_a_snapshot_can_contain_a_cycle(self) -> None:
-        root = {}
-        root["loop"] = root
-        fork = snapshot(root)
-        self.assertIsNot(fork, root)
-        self.assertIs(fork["loop"], fork)
+    def test_deep_copy_detaches_a_container_and_keeps_shared_children(self) -> None:
+        child = ["marker"]
+        original = [child, child]
+        fork = deepcopy(original)
+        self.assertEqual(__, fork[0] is child)
+        self.assertEqual(__, fork[0] is fork[1])
+        fork[0].append("new")
+        self.assertEqual(__, original[1])
 
-    def test_recording_a_point_leaves_the_input_alone(self) -> None:
-        state = {"north": {"points": [5]}}
-        updated = record(state, "north", 6)
-        self.assertEqual(updated["north"]["points"], [5, 6])
-        self.assertEqual(state["north"]["points"], [5])
+    def test_a_copy_can_point_to_itself(self) -> None:
+        node: list[object] = []
+        node.append(node)
+        shallow = node.copy()
+        detached = deepcopy(node)
+        self.assertEqual(__, shallow[0] is shallow)
+        self.assertEqual(__, detached[0] is detached)
+        self.assertEqual(__, detached[0] is node)
 
 
 T = TypeVar("T")

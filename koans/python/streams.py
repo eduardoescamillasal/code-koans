@@ -25,20 +25,33 @@ class AboutLazyStreams(Koan):
         source = [10, 20, 30]
         self.assertEqual(__, (tuple(islice(source, 2)), tuple(source)))
 
-    def test_adjacent_windows_overlap(self) -> None:
-        source = iter([2, 4, 8, 16])
-        iterator = windows(source, 3)
-        self.assertEqual(next(iterator), (2, 4, 8))
-        self.assertEqual(tuple(iterator), ((4, 8, 16),))
+    def test_constructing_a_generator_leaves_work_pending(self) -> None:
+        seen: list[int] = []
 
-    def test_invalid_width_leaves_input_unconsumed(self) -> None:
-        items = iter([1, 2])
-        with self.assertRaises(ValueError):
-            list(windows(items, 0))
-        self.assertEqual(next(items), 1)
+        def readings() -> Iterator[int]:
+            for value in (4, 8, 12):
+                seen.append(value)
+                yield value
 
-    def test_rise_indices_refer_to_the_left_item(self) -> None:
-        self.assertEqual(first_rises([7, 6, 9, 9, 12], 2), [1, 3])
+        source = readings()
+        self.assertEqual(__, seen.copy())
+        self.assertEqual(__, next(source))
+        self.assertEqual(__, seen.copy())
+        self.assertEqual(__, tuple(source))
+
+    def test_freezing_a_moving_buffer_keeps_an_earlier_window(self) -> None:
+        buffer = deque([1, 2], maxlen=2)
+        first = tuple(buffer)
+        buffer.append(3)
+        self.assertEqual(__, first)
+        self.assertEqual(__, tuple(buffer))
+
+    def test_taking_matches_consumes_rejected_items_along_the_way(self) -> None:
+        source = iter([2, 3, 4, 5, 6])
+        odds = (value for value in source if value % 2)
+        self.assertEqual(__, list(islice(odds, 1)))
+        self.assertEqual(__, next(source))
+        self.assertEqual(__, list(odds))
 
 
 T = TypeVar("T")

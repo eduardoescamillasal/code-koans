@@ -1,4 +1,9 @@
 def implement(t, s):
+    first = s._cache_key((4,), {"scale": 3, "offset": 1})
+    t.assertEqual(first, s._cache_key((4,), {"offset": 1, "scale": 3}))
+    t.assertNotEqual(first, s._cache_key((4,), {"offset": 2, "scale": 3}))
+    t.assertIsInstance(hash(first), int)
+
     calls = []
     def f(a, b):
         """Combine values."""

@@ -37,30 +37,59 @@ class AboutDescriptors(Koan):
         record.__dict__["value"] = "local"
         self.assertEqual(__, record.value)
 
-    def test_a_field_stores_values_per_instance(self) -> None:
+    def test_an_inherited_property_uses_the_receiving_instance(self) -> None:
         class Reading:
-            value = bounded_int(1, 4)
+            @property
+            def kelvin(self) -> int:
+                return self.celsius + 273
 
-        first, second = Reading(), Reading()
-        first.value, second.value = 1, 4
-        self.assertEqual(first.value, 1)
-        self.assertEqual(second.value, 4)
+            celsius = 0
 
-    def test_an_invalid_write_leaves_the_old_value_alone(self) -> None:
+        class WarmReading(Reading):
+            celsius = 10
+
+        self.assertEqual(__, Reading().kelvin)
+        self.assertEqual(__, WarmReading().kelvin)
+        self.assertEqual(__, isinstance(WarmReading.kelvin, property))
+
+    def test_set_name_observes_which_attribute_is_bound(self) -> None:
+        class Label:
+            def __set_name__(self, owner: type, name: str) -> None:
+                self.name = name
+
+        field = Label()
+
         class Reading:
-            count = bounded_int(0, 1)
+            pressure = field
 
-        reading = Reading()
-        reading.count = 1
-        with self.assertRaises(ValueError):
-            reading.count = True
-        self.assertEqual(reading.count, 1)
+        self.assertEqual(__, field.name)
+        self.assertEqual(__, Reading.pressure is field)
 
-    def test_a_schema_creates_a_validated_attribute(self) -> None:
-        Reading = reading_type({"degrees": (-20, 50)})
-        reading = Reading()
-        reading.degrees = -20
-        self.assertEqual(reading.degrees, -20)
+    def test_a_descriptor_setter_can_validate_before_storing(self) -> None:
+        class Reading:
+            def __init__(self) -> None:
+                self._count = 0
+
+            @property
+            def count(self) -> int:
+                return self._count
+
+            @count.setter
+            def count(self, value: int) -> None:
+                if type(value) is not int:
+                    raise ValueError("exact integer required")
+                self._count = value
+
+        row = Reading()
+        row.count = 4
+        try:
+            row.count = True
+        except ValueError:
+            reason = "rejected"
+        else:
+            reason = "accepted"
+        self.assertEqual(__, reason)
+        self.assertEqual(__, row.count)
 
 
 class BoundedInt:

@@ -30,21 +30,23 @@ class AboutStableProbabilities(Koan):
         weights = [math.exp(logit - max(logits)) for logit in logits]
         self.assertEqual(__, tuple(weight / sum(weights) for weight in weights))
 
-    def test_equal_logits_share_probability_mass(self) -> None:
-        loss, gradient = cross_entropy([1000, 1000], 0)
-        self.assertAlmostEqual(loss, math.log(2))
-        self.assertEqual(gradient, [-0.5, 0.5])
+    def test_floating_point_addition_can_erase_a_small_increment(self) -> None:
+        self.assertEqual(__, (1e16 + 1.0) - 1e16)
+        self.assertEqual(__, (1.0 + 1.0) - 1.0)
 
-    def test_underflow_need_not_make_the_loss_infinite(self) -> None:
-        # The true target probability can underflow while its negative log stays finite.
-        loss, gradient = cross_entropy([1200.0, 0.0], 1)
-        self.assertAlmostEqual(loss, 1200.0)
-        self.assertEqual(gradient, [1.0, -1.0])
+    def test_the_log_loss_can_survive_probability_underflow(self) -> None:
+        target, peak = 0.0, 1000.0
+        weights = [math.exp(peak - peak), math.exp(target - peak)]
+        self.assertEqual(__, weights[1] / sum(weights))
+        self.assertEqual(__, math.log(sum(weights)) - (target - peak))
 
-    def test_a_shared_bias_receives_two_derivative_terms(self) -> None:
-        loss, slope = calibrate([0, 0, 0], 2, 0, (0, 1))
-        self.assertAlmostEqual(loss, math.log(3))
-        self.assertAlmostEqual(slope, 2 / 3)
+    def test_only_the_target_coordinate_gets_the_indicator(self) -> None:
+        probabilities = [0.25, 0.5, 0.25]
+        target = 1
+        gradients = [p - (index == target) for index, p in enumerate(probabilities)]
+        self.assertEqual(__, gradients[0])
+        self.assertEqual(__, gradients[target])
+        self.assertEqual(__, sum(gradients))
 
 
 def cross_entropy(logits: list[float], target: int) -> tuple[float, list[float]]:

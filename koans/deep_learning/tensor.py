@@ -22,17 +22,24 @@ class AboutBroadcasting(Koan):
     def test_a_singleton_can_expand(self) -> None:
         self.assertEqual(__, tuple((x, 10) for x in [1, 2]))
 
-    def test_rows_and_columns_can_expand_together(self) -> None:
-        self.assertEqual(add([[2]], [[1, 3]]), [[3, 5]])
-        self.assertEqual(add([[1], [3]], [[10, 20]]), [[11, 21], [13, 23]])
+    def test_a_row_can_be_reused_for_each_column_value(self) -> None:
+        column = [1, 3]
+        row = [10, 20]
+        cells = [[base + shift for shift in row] for base in column]
+        self.assertEqual(__, [len(cells), len(cells[0])])
+        self.assertEqual(__, cells[1])
 
-    def test_two_cannot_broadcast_to_three(self) -> None:
-        # A singleton can expand, but a size of two cannot broadcast to three.
-        with self.assertRaises(ValueError):
-            add([[1, 2]], [[3, 4, 5]])
+    def test_a_single_input_can_contribute_to_every_output_row(self) -> None:
+        shared = 4
+        inputs = [2, 3, 5]
+        outputs = [shared * item for item in inputs]
+        self.assertEqual(__, outputs)
+        self.assertEqual(__, sum(inputs))
 
-    def test_totals_reduce_over_different_axes(self) -> None:
-        self.assertEqual(totals([1, 3], [10, 20]), ([32, 36], [24, 44]))
+    def test_reducing_by_row_and_by_column_preserves_different_axes(self) -> None:
+        table = [[2, 3, 4], [5, 6, 7]]
+        self.assertEqual(__, [sum(row) for row in table])
+        self.assertEqual(__, [sum(column) for column in zip(*table)])
 
 
 T = TypeVar("T", bound="Addable")

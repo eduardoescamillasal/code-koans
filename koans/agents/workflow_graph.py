@@ -11,7 +11,7 @@ page size or negative page count. Zero pages still reports the checkpoint status
 
 
 from koans import Koan, __, todo
-from koans.agents._workflow_graph import Checkpoint, Node, RunResult, State
+from koans.agents._workflow_graph import Checkpoint, Node, RunResult
 
 
 class AboutWorkflowCheckpoints(Koan):
@@ -27,28 +27,31 @@ class AboutWorkflowCheckpoints(Koan):
         candidate["attempts"] += 1
         self.assertEqual(__, (original["attempts"], candidate["attempts"]))
 
-    def test_a_valid_transition_commits_a_revision(self) -> None:
-        start = Checkpoint("count", 2, {"count": 7})
-        graph = WorkflowGraph({"count": _count_once})
-        self.assertEqual(graph.advance(start, 1), RunResult("complete", Checkpoint(None, 3, {"count": 8})))
-        self.assertEqual(start.state, {"count": 7})
+    def test_a_frozen_record_can_still_contain_a_mutable_dictionary(self) -> None:
+        first = Checkpoint("start", 1, {"count": 0})
+        candidate = Checkpoint("next", 2, first.state)
+        candidate.state["count"] += 1
+        self.assertEqual(__, first.revision)
+        self.assertEqual(__, first.state["count"])
+        self.assertEqual(__, candidate.state is first.state)
 
-    def test_an_unknown_route_cannot_commit_state(self) -> None:
-        def invalid(state: State) -> str:
-            state["count"] += 99
-            return "missing"
+    def test_a_transition_validates_its_route_before_committing(self) -> None:
+        current = Checkpoint("start", 1, {"count": 0})
+        proposed = current.state.copy()
+        proposed["count"] = 7
+        destination = "later"
+        graph = {"start"}
+        if destination in graph:
+            current = Checkpoint(destination, 2, proposed)
+        self.assertEqual(__, current.revision)
+        self.assertEqual(__, current.state)
+        self.assertEqual(__, current.next_node)
 
-        start = Checkpoint("bad", 4, {"count": 1})
-        graph = WorkflowGraph({"bad": invalid})
-        self.assertEqual(graph.advance(start, 1), RunResult("failed", start))
-        self.assertEqual(start.state, {"count": 1})
-
-    def test_page_limits_allow_resuming_a_checkpoint(self) -> None:
-        start = Checkpoint("count", 0, {"count": 0})
-        graph = WorkflowGraph({"count": _count_once})
-        self.assertEqual(graph.run_pages(start, 1, 0), RunResult("paused", start))
-        self.assertEqual(graph.run_pages(start, 1, 3),
-                      RunResult("complete", Checkpoint(None, 1, {"count": 1})))
+    def test_pausing_preserves_the_next_node(self) -> None:
+        page = RunResult("paused", Checkpoint("next", 3, {"count": 9}))
+        self.assertEqual(__, page.status == "complete")
+        self.assertEqual(__, page.checkpoint.next_node)
+        self.assertEqual(__, page.checkpoint.revision)
 
 
 class WorkflowGraph:
@@ -74,7 +77,3 @@ class WorkflowGraph:
         for _ in range(pages):
             todo("advance one page unless already finished or failed")
         return result
-
-
-def _count_once(state: State) -> None:
-    state["count"] += 1

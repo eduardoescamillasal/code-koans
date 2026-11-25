@@ -22,8 +22,7 @@ On systems where the command is named `python3`, use it in place of `python`.
 The first run stops here (traceback shortened).
 
 ```text
-test_two_names_share_the_same_list (koans.python.references.AboutReferences.test_two_names_share_the_same_list)
-koans/python/references.py · predict ... FAIL
+test_two_names_share_the_same_list (koans.python.references.AboutReferences.test_two_names_share_the_same_list) ... FAIL
 ...
 AssertionError: __ (fill in your prediction) != (True, 2)
 
@@ -34,12 +33,13 @@ FAILED (failures=1)
 ```
 
 Open `koans/python/references.py`. Each lesson is an `About…` class with short
-`test_…` methods in reading order. Read the setup and fill the `__` directly in
-`self.assertEqual(__, ...)`. Rerun and follow the next failing method.
+`test_…` methods in reading order. Read the setup and fill the blanks directly
+in the assertions. A method can have several blanks. The runner stops at the
+first one that fails, including when other blanks remain in the same method.
 
-Some methods exercise code in the same file. Replace each focused
-`todo("...")` with the requested code, rerunning as you go. The runner also
-applies independent checks under `checks/`. Keep your edits in `koans/`.
+After the inline koans, the runner starts the implementation checks. Replace
+each focused `todo("...")` in the learner file with the requested code.
+The fixed project checks live under `checks/`. Keep your edits in `koans/`.
 Local checks and reference solutions are inspectable.
 
 The inline lesson style is inspired by [Python Koans](https://github.com/gregmalcolm/python_koans/tree/master/koans).

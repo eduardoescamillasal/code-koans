@@ -43,25 +43,64 @@ class AboutAsyncScheduling(Koan):
         asyncio.run(scenario())
         self.assertEqual(__, tuple(seen))
 
-    def test_results_follow_submission_order(self) -> None:
-        async def immediate(value: int) -> int:
-            return value
+    def test_gather_preserves_input_order_after_out_of_order_completion(self) -> None:
+        async def scenario() -> tuple[list[str], list[str]]:
+            ready = asyncio.Event()
+            finished: list[str] = []
 
-        result = asyncio.run(run_jobs([lambda: immediate(8), lambda: immediate(3)], 1))
-        self.assertEqual(result, [8, 3])
+            async def first() -> str:
+                await ready.wait()
+                finished.append("first")
+                return "first"
 
-    def test_empty_work_needs_no_workers(self) -> None:
-        # No workers should be needed for empty input.
-        self.assertEqual(asyncio.run(run_jobs([], 3)), [])
-        with self.assertRaises(ValueError):
-            asyncio.run(run_jobs([], 0))
+            async def second() -> str:
+                finished.append("second")
+                ready.set()
+                return "second"
 
-    def test_job_names_follow_their_outcomes(self) -> None:
-        async def work() -> str:
-            return "ok"
+            ordered = await asyncio.gather(first(), second())
+            return finished, ordered
 
-        result = asyncio.run(collect_named({"one": work}, 1))
-        self.assertEqual(result, {"one": ("ok", "ok")})
+        finished, ordered = asyncio.run(scenario())
+        self.assertEqual(__, finished)
+        self.assertEqual(__, ordered)
+
+    def test_cancelling_a_running_coroutine_executes_finally(self) -> None:
+        async def scenario() -> list[str]:
+            started = asyncio.Event()
+            seen: list[str] = []
+
+            async def worker() -> None:
+                try:
+                    started.set()
+                    await asyncio.Future()
+                finally:
+                    seen.append("cleanup")
+
+            task = asyncio.create_task(worker())
+            await started.wait()
+            task.cancel()
+            try:
+                await task
+            except asyncio.CancelledError:
+                seen.append("cancelled")
+            return seen
+
+        self.assertEqual(__, asyncio.run(scenario()))
+
+    def test_gather_can_report_an_error_without_losing_other_results(self) -> None:
+        async def fail() -> int:
+            raise ValueError("missing input")
+
+        async def continue_work() -> int:
+            return 7
+
+        async def scenario() -> list[int | BaseException]:
+            return await asyncio.gather(fail(), continue_work(), return_exceptions=True)
+
+        first, second = asyncio.run(scenario())
+        self.assertEqual(__, type(first).__name__)
+        self.assertEqual(__, second)
 
 
 T = TypeVar("T")

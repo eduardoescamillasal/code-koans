@@ -30,32 +30,26 @@ class AboutAgentRuntime(Koan):
         safe = [{"role": "system", "text": "read only"}, {"role": "document", "text": text}]
         self.assertEqual(__, tuple(entry["role"] for entry in safe))
 
-    def test_a_final_reply_ends_the_loop(self) -> None:
-        def model(context: Context) -> str:
-            self.assertEqual(context["policy"], "read only")
-            return '{"type":"final","text":"done"}'
+    def test_canonical_arguments_ignore_key_order_and_distinguish_booleans(self) -> None:
+        first = {"alpha": 1, "beta": 2}
+        reordered = {"beta": 2, "alpha": 1}
+        changed = {"alpha": True, "beta": 2}
+        self.assertEqual(__, first == changed)
+        self.assertEqual(__, _canonical(first) == _canonical(reordered))
+        self.assertEqual(__, _canonical(first) == _canonical(changed))
 
-        result = run(model, json.loads, lambda name, args: None, policy="read only")
-        self.assertEqual(result, ("final", "done", []))
+    def test_a_model_can_mutate_its_copy_without_updating_the_runtime(self) -> None:
+        original = {"policy": "read", "results": [{"ok": True}]}
+        copied = deepcopy(original)
+        copied["policy"] = "changed"
+        copied["results"][0]["ok"] = False
+        self.assertEqual(__, original["policy"])
+        self.assertEqual(__, original["results"][0]["ok"])
 
-    def test_an_identical_call_id_runs_the_tool_once(self) -> None:
-        raw = '{"type":"call","id":"x","name":"read","args":{}}'
-        attempts: list[str] = []
-
-        def tool(name: str, args: dict[str, Scalar]) -> object:
-            attempts.append(name)
-            return 1
-
-        report = run(lambda context: raw, json.loads, tool, policy="read only", steps=2)
-        self.assertEqual(report, ("steps", None, [{"id": "x", "ok": True, "value": 1}]))
-        self.assertEqual(attempts, ["read"])
-
-    def test_a_final_reply_does_not_change_stock(self) -> None:
-        def model(context: Context) -> str:
-            return '{"type":"final","text":"done"}'
-
-        remaining, report = reserve_stock(8, model, json.loads)
-        self.assertEqual((remaining, report), (8, ("final", "done", [])))
+    def test_characters_and_bytes_are_different_budget_units(self) -> None:
+        text = "ready ✓"
+        self.assertEqual(__, len(text))
+        self.assertEqual(__, len(text.encode("utf-8")))
 
 
 Status = Literal["final", "steps", "context", "protocol", "conflict"]

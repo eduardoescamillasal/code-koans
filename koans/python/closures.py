@@ -46,40 +46,39 @@ class AboutClosures(Koan):
         # Why does the second wrapper still compute a result?
         self.assertEqual(__, self._count_calls(cache_outside=True))
 
-    def test_keyword_order_does_not_change_a_cache_key(self) -> None:
-        first = _cache_key((4,), {"scale": 3, "offset": 1})
-        reordered = _cache_key((4,), {"offset": 1, "scale": 3})
-        different = _cache_key((4,), {"offset": 2, "scale": 3})
-        self.assertEqual(first, reordered)
-        self.assertNotEqual(first, different)
-        self.assertIsInstance(hash(first), int)
+    def test_defaults_capture_values_while_closures_read_cells(self) -> None:
+        scale = 2
 
-    def test_repeated_arguments_reuse_a_result(self) -> None:
-        calls: list[int] = []
+        def read() -> int:
+            return scale
 
-        def scale(number: int, *, factor: int) -> int:
-            calls.append(number)
-            return number * factor
+        def captured(value: int = scale) -> int:
+            return value
 
-        compute = memoize(scale)
-        self.assertEqual(compute(3, factor=2), 6)
-        self.assertEqual(compute(3, factor=2), 6)
-        self.assertEqual(compute(3, factor=4), 12)
-        self.assertEqual(calls, [3, 3])
+        scale = 5
+        self.assertEqual(__, read())
+        self.assertEqual(__, captured())
 
-    def test_separately_decorated_functions_have_separate_caches(self) -> None:
-        def first(value: int) -> int:
-            return value + 1
+    def test_a_key_can_ignore_keyword_order_without_ignoring_values(self) -> None:
+        a = {"scale": 3, "offset": 1}
+        b = {"offset": 1, "scale": 3}
+        c = {"offset": 2, "scale": 3}
+        self.assertEqual(__, tuple(a.items()) == tuple(b.items()))
+        self.assertEqual(__, frozenset(a.items()) == frozenset(b.items()))
+        self.assertEqual(__, frozenset(a.items()) == frozenset(c.items()))
 
-        def second(value: int) -> int:
-            return value + 2
+    def test_wraps_exposes_the_original_name_and_description(self) -> None:
+        def dosage(units: int) -> int:
+            """Scale the measurement."""
+            return units * 2
 
-        self.assertEqual(memoize(first)(4), 5)
-        self.assertEqual(memoize(second)(4), 6)
+        @wraps(dosage)
+        def traced(units: int) -> int:
+            return dosage(units)
 
-    def test_blocked_cells_change_the_number_of_routes(self) -> None:
-        self.assertEqual(routes(1, 2, set()), 3)
-        self.assertEqual(routes(1, 2, {(0, 1)}), 1)
+        self.assertEqual(__, traced.__name__)
+        self.assertEqual(__, traced.__doc__)
+        self.assertEqual(__, traced.__wrapped__ is dosage)
 
 
 P = ParamSpec("P")
