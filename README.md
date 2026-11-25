@@ -2,8 +2,8 @@
 
 Predict what Python will do, explain the mechanism, then implement it yourself.
 Code Koans is a CLI-only curriculum for Python internals, deep learning, and
-agent engineering. The opening curriculum includes 20 modules and a cross-track
-diagnosis challenge, all driven by ordinary Python files and `unittest`.
+agent engineering. The curriculum includes 24 track modules and two cross-track
+projects, all driven by ordinary Python files and `unittest`.
 
 ## Quick start
 
@@ -65,13 +65,13 @@ Each module follows the same progression.
 
 | Track | Opening modules | Advanced implementation |
 | --- | --- | --- |
-| Python | References and aliasing, closures and decorators, descriptor lookup, lazy iteration, AsyncIO, REST service contracts | Schedule bounded jobs in input order and drain workers on error or cancellation |
-| Deep Learning | Linear maps, floating point and cross-entropy, scalar autodiff, rank-two broadcasting, masked attention | Backpropagate through shared graph nodes and use gradients to fit a model |
+| Python | Named tuples, special methods, references and aliasing, closures and decorators, descriptor lookup, lazy iteration, AsyncIO, REST service contracts | Schedule bounded jobs in input order and drain workers on error or cancellation |
+| Deep Learning | Linear maps, floating point and cross-entropy, scalar autodiff, rank-two broadcasting, masked attention, feature interactions, classifier evaluation | Backpropagate through shared graph nodes and use gradients to fit a model |
 | Agentic AI | Message schemas, tool permissions, cosine retrieval, dependency planning, bounded runtime, provider adapters, checkpointed workflows, grounded QA, webhooks | Reject ambiguous messages, deduplicate attempted actions, and report partial execution |
 
-The cross-track challenge uses your autodiff, broadcasting, retrieval, and
-agent components to diagnose a small neural training run under a read-only
-policy.
+The cross-track projects diagnose a training run and audit missed positives
+by cohort under a read-only policy. The [capstone guide](docs/capstones.md)
+lists direct commands, prerequisites, and questions to work through by hand.
 
 The [workflow practice guide](docs/workflow-practice.md) maps the typed,
 class-based koans to FastAPI, Claude, Azure OpenAI, LangChain, LangGraph, n8n,

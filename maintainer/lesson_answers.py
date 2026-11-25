@@ -306,4 +306,86 @@ ANSWERS: dict[str, dict[str, tuple[GuessSet, GuessSet]]] = {
             (True, True),
         ),
     },
+    "python_named_records": {
+        "test_replace_creates_a_new_record": (
+            (None, 0.0, False),
+            (0.0, 0.0, True),
+        ),
+        "test_value_membership_cannot_identify_a_missing_reading": (
+            (1, 0, 0.0),
+            (2, 1, None),
+        ),
+        "test_indexing_by_sensor_alone_loses_an_observation": (
+            (8.0, 2),
+            (2.0, 1),
+        ),
+        "test_factory_namedtuples_use_defaults_from_the_right": (
+            (("sensor", "tick", "value"), None, True),
+            (("sensor", "tick", "value"), 4, False),
+        ),
+    },
+    "python_special_methods": {
+        "test_not_implemented_allows_a_reflected_operation": (
+            (True, 'reflected'),
+            (False, 'unsupported'),
+        ),
+        "test_multiplication_syntax_selects_the_method_by_operand_order": (
+            (('left', 3), ('right', 3)),
+            (('left', 3), ('left', 3)),
+        ),
+        "test_an_in_place_expression_can_rebind_instead_of_mutating": (
+            ((2, 3, 4), (2, 3), False),
+            ((2, 3, 4), (2, 3, 4), True),
+        ),
+        "test_indexing_passes_slices_to_getitem": (
+            (8, (5, 8), (2, 5, 8)),
+            (8, (5,), ()),
+        ),
+        "test_bool_uses_len_when_bool_is_absent": (
+            (False, True),
+            (True, False),
+        ),
+    },
+    "deep_learning_evaluation": {
+        "test_changing_the_threshold_changes_who_is_missed": (
+            ([True, False, True], [True, False], 1),
+            ([True, False], [False], 2),
+        ),
+        "test_f1_depends_on_positive_errors_not_true_negatives": (
+            ([6, 6, 4], 1.0),
+            ([103, 13, 4], 1.0),
+        ),
+        "test_averaging_rates_weights_groups_differently_from_pooling_counts": (
+            ((10, 2), 0.7),
+            ((10, 2), 0.8333333333333334),
+        ),
+    },
+    "deep_learning_interactions": {
+        "test_centering_changes_the_origin_of_an_interaction": (
+            ([1, 1], [209, 273]),
+            ([-1, 1], [1, 1]),
+        ),
+        "test_the_same_residual_flows_through_different_local_features": (
+            ([-2, -4, 6], 12),
+            ([-2, -4, 6], -12),
+        ),
+        "test_cancelling_linear_gradients_can_hide_a_product_signal": (
+            (0, -4),
+            (0, 0),
+        ),
+    },
+    "cross_track_model_audit": {
+        "test_evidence_support_is_not_the_size_of_the_cohort": (
+            ((14, 6), (1, 5)),
+            ((14, 6), (14, 6)),
+        ),
+        "test_an_undefined_rate_is_distinct_from_no_missed_positives": (
+            (None, 0.0),
+            (0.0, 0.0),
+        ),
+        "test_a_model_request_cannot_grant_itself_write_permission": (
+            (['inspect', 'worst'], 1),
+            (['inspect', 'change_threshold', 'worst'], 0),
+        ),
+    },
 }

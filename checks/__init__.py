@@ -8,10 +8,10 @@ import unittest
 from koans import Exercise, Koan
 
 TRACKS = {
-    "python": ("references", "closures", "attributes", "streams", "scheduler", "rest_service"),
-    "deep_learning": ("linear", "precision", "autodiff", "tensor", "attention"),
+    "python": ("references", "named_records", "special_methods", "closures", "attributes", "streams", "scheduler", "rest_service"),
+    "deep_learning": ("linear", "precision", "autodiff", "tensor", "attention", "interactions", "evaluation"),
     "agents": ("protocol", "tools", "retrieval", "planning", "runtime", "providers", "workflow_graph", "grounded_qa", "webhooks"),
-    "cross_track": ("diagnosis",),
+    "cross_track": ("diagnosis", "model_audit"),
 }
 PROJECT_STAGES = ("implement", "break_cases", "transfer")
 

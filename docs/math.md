@@ -46,3 +46,27 @@ undefined, so the koan raises an error.
 For nonzero vectors a and b, a·b = ‖a‖‖b‖ cos(θ). Divide by their lengths to
 compare directions. Normalizing coordinates before taking their dot product
 also avoids an intermediate product of two large vector norms.
+
+## Interactions and batch gradients
+
+For prediction ŷ = a + bx + cy + dxy, the effect of increasing x is b + dy.
+That effect can change sign as y changes. For the loss (ŷ − t)², apply the
+chain rule to get 2(ŷ − t) times (1, x, y, xy) for the four coefficients.
+Average these vectors across the batch before updating the weights. Duplicating
+every row leaves that mean gradient unchanged.
+
+On the four balanced sign pairs x, y ∈ {−1, 1}, let t = xy. At zero weights the
+residual is −xy. The bias and linear gradient sums cancel by symmetry. The
+product-coordinate contribution is −2(xy)² = −2 for every row.
+
+## Thresholds and cohort rates
+
+A score becomes a label only after choosing an operating threshold. Lowering
+the threshold can recover missed positives and introduce false alarms. F1
+combines those errors through 2TP / (2TP + FP + FN). Select the threshold on
+validation data, then evaluate that fixed threshold on a separate holdout.
+
+Within a cohort, the false-negative rate is FN / (TP + FN). It is undefined
+when there are no actual positives. Pooling the counts weights each cohort
+by its number of actual positives. Averaging per-cohort rates gives
+each eligible cohort the same weight.
